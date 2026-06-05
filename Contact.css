@@ -1,0 +1,71 @@
+/* ============================================
+   CONTACT PAGE STYLES
+   ============================================ */
+
+.contact-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1rem;
+}
+
+.contact-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--linen);
+  font-size: 0.95rem;
+}
+
+.contact-detail-row:last-child {
+  border-bottom: none;
+}
+
+.contact-detail-row i {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.contact-detail-row a {
+  color: var(--golden-bronze);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contact-detail-row a:hover {
+  color: var(--berry-blush);
+  text-decoration: underline;
+}
+
+.hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linen);
+  font-size: 0.9rem;
+}
+
+.hours-row:last-child {
+  border-bottom: none;
+}
+
+.hours-open {
+  color: var(--muted-teal);
+  font-weight: 600;
+}
+.hours-closed {
+  color: var(--rosy-taupe);
+  font-weight: 600;
+}
