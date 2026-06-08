@@ -44,7 +44,7 @@
     <div class="hero-section text-center">
         <div class="container">
             <h1 class="display-4 font-serif mb-2">My Profile</h1>
-            <p class="lead mb-0">Manage your personal information</p>
+            <p class="lead mb-0">Your personal information</p>
         </div>
     </div>
 
@@ -52,7 +52,7 @@
     <div class="container pb-5">
         <div class="row g-4 justify-content-center">
 
-            <!-- Personal Info Form -->
+            <!-- Personal Info Display -->
             <div class="col-lg-7">
                 <div class="card">
                     <div class="card-header-linen">
@@ -62,32 +62,29 @@
                         <div class="row g-3">
                             <div class="col-sm-6">
                                 <label class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="profileFirstName" value="Sarah">
+                                <p class="info-value">Sarah</p>
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="profileLastName" value="Johnson">
+                                <p class="info-value">Johnson</p>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">
-                                    <i class="bi bi-envelope me-2" style="color: var(--golden-bronze);"></i>Email Address
+                                    <i class="bi bi-envelope me-2 icon-golden"></i>Email Address
                                 </label>
-                                <input type="email" class="form-control" id="profileEmail" value="sarah.j@email.com">
+                                <p class="info-value">sarah.j@email.com</p>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">
-                                    <i class="bi bi-telephone me-2" style="color: var(--golden-bronze);"></i>Phone Number
+                                    <i class="bi bi-telephone me-2 icon-golden"></i>Phone Number
                                 </label>
-                                <input type="tel" class="form-control" id="profilePhone" value="(555) 234-5678">
+                                <p class="info-value">(555) 234-5678</p>
                             </div>
                             <div class="col-sm-4">
                                 <label class="form-label">Age</label>
-                                <input type="number" class="form-control" id="profileAge" value="28">
+                                <p class="info-value">28</p>
                             </div>
                         </div>
-                        <button class="btn btn-primary mt-4" onclick="saveProfile()">
-                            <i class="bi bi-check-lg me-2"></i>Save Changes
-                        </button>
                     </div>
                 </div>
             </div>
@@ -102,7 +99,7 @@
                         <div class="avatar-circle">
                             <i class="bi bi-person-fill"></i>
                         </div>
-                        <h4 class="mb-1" id="profileCardName">Sarah Johnson</h4>
+                        <h4 class="mb-1">Sarah Johnson</h4>
                         <div class="mb-3">
                             <span class="badge-volunteer">
                                 <i class="bi bi-patch-check-fill me-1"></i> Volunteer
@@ -120,14 +117,14 @@
                                 <i class="bi bi-envelope"></i>
                                 <div>
                                     <div class="info-label">Email</div>
-                                    <div id="profileCardEmail">sarah.j@email.com</div>
+                                    <div>sarah.j@email.com</div>
                                 </div>
                             </div>
                             <div class="info-row">
                                 <i class="bi bi-telephone"></i>
                                 <div>
                                     <div class="info-label">Phone</div>
-                                    <div id="profileCardPhone">(555) 234-5678</div>
+                                    <div>(555) 234-5678</div>
                                 </div>
                             </div>
                         </div>
@@ -141,24 +138,12 @@
     <!-- FOOTER -->
     <footer class="footer-custom text-center">
         <div class="container">
-            <p class="font-serif mb-2" style="color: var(--golden-bronze); font-size: 1.25rem;">We Share & Care Food Bank</p>
-            <p class="mb-0" style="color: rgba(240,230,220,0.6); font-size: 0.9rem;">Thank you for your dedication to our community</p>
+            <p class="font-serif mb-2 footer-title">We Share & Care Food Bank</p>
+            <p class="mb-0 footer-subtitle">Thank you for your dedication to our community</p>
         </div>
     </footer>
 
-    <!-- TOAST -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="liveToast" class="toast toast-custom" role="alert">
-            <div class="toast-header" style="background: var(--graphite); color: var(--linen); border-bottom: 1px solid var(--golden-bronze);">
-                <strong class="me-auto">We Share & Care Food Bank</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body" id="toastMessage"></div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="shared.js"></script>
-    <script src="profile.js"></script>
 </body>
 </html>
