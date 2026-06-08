@@ -2,50 +2,31 @@
    INVENTORY PAGE JS
    ============================================ */
 
-// Sample product catalog
-const allProducts = [
-  { name: '6 pack Bananas', category: 'fresh' },
-  { name: '1Kg Apples', category: 'fresh' },
-  { name: '500g Strawberries', category: 'fresh' },
-  { name: '1L Milk', category: 'refrigerated' },
-  { name: '2L Soy Milk', category: 'refrigerated' },
-  { name: '2L Orange Juice', category: 'drink' },
-  { name: '1L Apple Juice', category: 'drink' },
-  { name: '400g Canned Beans', category: 'canned' },
-  { name: '200g Canned Corn', category: 'canned' },
-].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
-
-// Inventory data
 let inventory = [
-  { id: 1, productName: '6 pack Bananas', category: 'fresh', quantity: 30, expiryDate: '2026-06-03', daysLeft: 2 },
-  { id: 2, productName: '1Kg Apples', category: 'fresh', quantity: 50, expiryDate: '2026-06-05', daysLeft: 4 },
-  { id: 3, productName: '1L Milk', category: 'refrigerated', quantity: 24, expiryDate: '2026-06-07', daysLeft: 6 },
-  { id: 4, productName: '2L Orange Juice', category: 'drink', quantity: 36, expiryDate: '2026-06-10', daysLeft: 9 },
-  { id: 5, productName: '400g Canned Beans', category: 'canned', quantity: 120, expiryDate: '2027-03-15', daysLeft: 274 },
-  { id: 6, productName: '6 pack Bananas', category: 'fresh', quantity: 20, expiryDate: '2026-06-08', daysLeft: 7 },
-  { id: 7, productName: '1Kg Apples', category: 'fresh', quantity: 35, expiryDate: '2026-06-12', daysLeft: 11 },
-  { id: 8, productName: '1L Milk', category: 'refrigerated', quantity: 18, expiryDate: '2026-06-04', daysLeft: 3 },
-  { id: 9, productName: '2L Orange Juice', category: 'drink', quantity: 42, expiryDate: '2026-06-15', daysLeft: 14 },
-  { id: 10, productName: '400g Canned Beans', category: 'canned', quantity: 80, expiryDate: '2027-04-20', daysLeft: 305 },
+  { id: 1, productName: 'Bananas', unit: 'kg', category: 'fresh', quantity: 30, expiryDate: '2026-06-03', daysLeft: 2 },
+  { id: 2, productName: 'Apples', unit: 'kg', category: 'fresh', quantity: 50, expiryDate: '2026-06-05', daysLeft: 4 },
+  { id: 3, productName: 'Milk', unit: 'L', category: 'refrigerated', quantity: 24, expiryDate: '2026-06-07', daysLeft: 6 },
+  { id: 4, productName: 'Orange Juice', unit: 'L', category: 'drink', quantity: 36, expiryDate: '2026-06-10', daysLeft: 9 },
+  { id: 5, productName: 'Canned Beans', unit: 'g', category: 'canned', quantity: 400, expiryDate: '2027-03-15', daysLeft: 274 },
+  { id: 6, productName: 'Bananas', unit: 'kg', category: 'fresh', quantity: 20, expiryDate: '2026-06-08', daysLeft: 7 },
+  { id: 7, productName: 'Apples', unit: 'kg', category: 'fresh', quantity: 35, expiryDate: '2026-06-12', daysLeft: 11 },
+  { id: 8, productName: 'Milk', unit: 'ml', category: 'refrigerated', quantity: 500, expiryDate: '2026-06-04', daysLeft: 3 },
+  { id: 9, productName: 'Orange Juice', unit: 'L', category: 'drink', quantity: 42, expiryDate: '2026-06-15', daysLeft: 14 },
+  { id: 10, productName: 'Canned Beans', unit: 'g', category: 'canned', quantity: 200, expiryDate: '2027-04-20', daysLeft: 305 },
 ];
 
-// State
 let sortField = null;
 let sortDirection = 'asc';
 let productFilter = '';
 let categoryFilter = '';
 
-// Initialize
 document.addEventListener('DOMContentLoaded', function() {
-  // Set min date for expiry date input to today
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('formExpiryDate').min = today;
   
-  populateProductDropdown();
   renderInventoryTable();
   updateActiveFilters();
   
-  // Event listeners
   document.getElementById('addDonationForm').addEventListener('submit', handleAddDonation);
   document.getElementById('filterProduct').addEventListener('input', function(e) {
     productFilter = e.target.value;
@@ -59,42 +40,18 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// Populate product dropdown
-function populateProductDropdown() {
-  const menu = document.getElementById('productDropdownMenu');
-  let currentCategory = '';
-  
-  let html = '';
-  allProducts.forEach(product => {
-    if (product.category !== currentCategory) {
-      currentCategory = product.category;
-      html += `<li><span class="dropdown-item-category text-capitalize">${currentCategory}</span></li>`;
-    }
-    html += `<li><a class="dropdown-item-product" href="#" onclick="selectProduct('${product.name}', '${product.category}'); return false;">${product.name}</a></li>`;
-  });
-  
-  menu.innerHTML = html;
-}
-
-// Select product from dropdown
-function selectProduct(name, category) {
-  document.getElementById('selectedProductText').textContent = name;
-  document.getElementById('formProductName').value = name;
-  document.getElementById('formCategory').value = category;
-}
-
-// Get category badge class
 function getCategoryBadgeClass(category) {
   const classes = {
     fresh: 'badge-fresh',
     refrigerated: 'badge-refrigerated',
     drink: 'badge-drink',
-    canned: 'badge-canned'
+    canned: 'badge-canned',
+    dry: 'badge-dry',
+    frozen: 'badge-frozen'
   };
   return classes[category] || 'badge-fresh';
 }
 
-// Get status badge
 function getStatusBadge(daysLeft) {
   if (daysLeft <= 2) {
     return `<span class="badge-status status-critical"><i class="bi bi-exclamation-triangle-fill"></i> ${daysLeft}d left</span>`;
@@ -105,13 +62,11 @@ function getStatusBadge(daysLeft) {
   }
 }
 
-// Format date for display
 function formatDate(dateStr) {
   const date = new Date(dateStr + 'T00:00:00');
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-// Handle sort
 function handleSort(field) {
   if (sortField === field) {
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -120,19 +75,17 @@ function handleSort(field) {
     sortDirection = 'asc';
   }
   
-  // Update sort icons
   document.querySelectorAll('.sort-icon').forEach(icon => {
     icon.className = 'bi bi-chevron-expand sort-icon';
   });
   const activeIcon = document.getElementById(`sort-${field}`);
   if (activeIcon) {
-    activeIcon.className = `bi bi-chevron-${sortDirection === 'asc' ? 'up' : 'down'} sort-icon text-golden`;
+    activeIcon.className = `bi bi-chevron-${sortDirection === 'asc' ? 'up' : 'down'} sort-icon`;
   }
   
   renderInventoryTable();
 }
 
-// Filter inventory
 function getFilteredInventory() {
   return inventory.filter(item => {
     const matchesProduct = productFilter === '' || item.productName.toLowerCase().includes(productFilter.toLowerCase());
@@ -141,7 +94,6 @@ function getFilteredInventory() {
   });
 }
 
-// Sort inventory
 function getSortedInventory(filtered) {
   if (!sortField) return filtered;
   
@@ -160,7 +112,6 @@ function getSortedInventory(filtered) {
   });
 }
 
-// Render inventory table
 function renderInventoryTable() {
   const tbody = document.getElementById('inventoryTableBody');
   const emptyState = document.getElementById('emptyState');
@@ -188,17 +139,17 @@ function renderInventoryTable() {
             <i class="bi bi-dash"></i>
           </button>
           <input type="number" class="quantity-input" value="${item.quantity}" 
-                 onchange="updateQuantity(${item.id}, this.value)" min="0">
+                 onchange="updateQuantity(${item.id}, this.value)" min="0" step="0.01">
           <button class="btn-quantity btn-increment" onclick="incrementQuantity(${item.id})">
             <i class="bi bi-plus"></i>
           </button>
+          <span class="unit-display">${item.unit}</span>
         </div>
       </td>
     </tr>
   `).join('');
 }
 
-// Update active filters display
 function updateActiveFilters() {
   const container = document.getElementById('activeFilters');
   
@@ -254,7 +205,15 @@ function clearAllFilters() {
   updateActiveFilters();
 }
 
-// Quantity handlers
+// Remove item from inventory by id
+function removeItem(id) {
+  const item = inventory.find(i => i.id === id);
+  const itemName = item ? item.productName : 'Item';
+  inventory = inventory.filter(i => i.id !== id);
+  renderInventoryTable();
+  showToast(`${itemName} removed from inventory (quantity reached 0)`);
+}
+
 function incrementQuantity(id) {
   const item = inventory.find(i => i.id === id);
   if (item) {
@@ -265,30 +224,39 @@ function incrementQuantity(id) {
 
 function decrementQuantity(id) {
   const item = inventory.find(i => i.id === id);
-  if (item && item.quantity > 0) {
+  if (item) {
     item.quantity--;
-    renderInventoryTable();
+    if (item.quantity <= 0) {
+      removeItem(id);
+    } else {
+      renderInventoryTable();
+    }
   }
 }
 
 function updateQuantity(id, value) {
   const item = inventory.find(i => i.id === id);
   if (item) {
-    item.quantity = parseInt(value) || 0;
-    renderInventoryTable();
+    const newQuantity = parseFloat(value) || 0;
+    if (newQuantity <= 0) {
+      removeItem(id);
+    } else {
+      item.quantity = newQuantity;
+      renderInventoryTable();
+    }
   }
 }
 
-// Add donation
 function handleAddDonation(e) {
   e.preventDefault();
   
-  const productName = document.getElementById('formProductName').value;
+  const productName = document.getElementById('formProductName').value.trim();
+  const quantity = parseFloat(document.getElementById('formQuantity').value) || 0;
+  const unit = document.getElementById('formUnit').value;
   const category = document.getElementById('formCategory').value;
-  const quantity = parseInt(document.getElementById('formQuantity').value) || 0;
   const expiryDate = document.getElementById('formExpiryDate').value;
   
-  if (!productName || !category || !quantity || !expiryDate) {
+  if (!productName || !quantity || !unit || !category || !expiryDate) {
     showToast('Please fill in all fields.');
     return;
   }
@@ -301,6 +269,7 @@ function handleAddDonation(e) {
   const newItem = {
     id: Date.now(),
     productName,
+    unit,
     category,
     quantity,
     expiryDate,
@@ -308,21 +277,15 @@ function handleAddDonation(e) {
   };
   
   inventory.push(newItem);
-  
-  // Reset form
   document.getElementById('addDonationForm').reset();
-  document.getElementById('selectedProductText').textContent = 'Select product';
-  document.getElementById('formProductName').value = '';
   
-  // Default sort by expiry date to show new item in correct place
   sortField = 'expiryDate';
   sortDirection = 'asc';
   
   renderInventoryTable();
-  showToast(`${productName} added to inventory!`);
+  showToast(`${productName} (${quantity} ${unit}) added to inventory!`);
 }
 
-// Submit updates
 function submitUpdates() {
   const message = document.getElementById('updateMessage');
   message.classList.remove('d-none');

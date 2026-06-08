@@ -31,46 +31,47 @@
   font-weight: 400;
 }
 
-/* Dropdown Button */
-.btn-dropdown {
-  background: white;
-  border: 1px solid #dee2e6;
-  color: var(--graphite);
-  padding: 0.375rem 0.75rem;
+/* Form Styling */
+.form-label {
+  color: var(--rosy-taupe);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
 }
 
-.btn-dropdown:hover,
-.btn-dropdown:focus {
+.form-control,
+.form-select {
+  border: 1.5px solid #dee2e6;
+  border-radius: 10px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.95rem;
+  color: var(--graphite);
+  background: white;
+}
+
+.form-control:focus,
+.form-select:focus {
   border-color: var(--golden-bronze);
   box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
+  outline: none;
 }
 
-/* Dropdown Menu Custom */
-.dropdown-menu {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid var(--rosy-taupe);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.form-control::placeholder {
+  color: #adb5bd;
+  font-size: 0.9rem;
 }
 
-.dropdown-item-category {
-  font-weight: 600;
-  color: var(--graphite);
-  background: var(--linen);
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid rgba(201, 151, 58, 0.1);
+.form-control-lg {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Calendar Icon */
+.calendar-icon {
   pointer-events: none;
-}
-
-.dropdown-item-product {
-  padding: 0.5rem 1rem 0.5rem 1.5rem;
-  color: var(--graphite);
-  cursor: pointer;
-}
-
-.dropdown-item-product:hover {
-  background: var(--linen);
-  color: var(--golden-bronze);
+  font-size: 1.1rem;
 }
 
 /* Table Styles */
@@ -140,6 +141,16 @@
 .badge-canned {
   background: rgba(201, 151, 58, 0.15);
   color: var(--golden-bronze);
+}
+
+.badge-dry {
+  background: rgba(160, 140, 120, 0.15);
+  color: var(--rosy-taupe);
+}
+
+.badge-frozen {
+  background: rgba(140, 180, 200, 0.15);
+  color: #5a8a9e;
 }
 
 /* Status Badges */
@@ -220,6 +231,14 @@
   outline: none;
 }
 
+/* Unit Display */
+.unit-display {
+  color: var(--rosy-taupe);
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-width: 25px;
+}
+
 /* Active Filters */
 .filter-badge {
   display: inline-flex;
@@ -283,13 +302,6 @@
   background: var(--graphite);
   color: var(--linen);
   border-bottom: 1px solid var(--golden-bronze);
-}
-
-/* Form Focus States */
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--golden-bronze);
-  box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
 }
 
 /* Input Group */
