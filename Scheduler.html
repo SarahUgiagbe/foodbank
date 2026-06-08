@@ -63,9 +63,14 @@
                             <label class="form-label d-block">How many days do you want to work?</label>
                             <input type="number" class="form-control text-center days-input" id="daysWanted"
                                    min="1" max="31" value="5">
-                            <small class="preference-hint">
+                            <small class="preference-hint" id="preferenceHint">
                                 This is your preference only. Select all available days on the calendar.
                             </small>
+                            <div class="assigned-days-info mt-2 d-none" id="assignedDaysInfo">
+                                <i class="bi bi-info-circle-fill me-1"></i>
+                                You are already assigned to <strong id="assignedCountDisplay">0</strong> day(s).
+                                Minimum preference is <strong id="minPreferenceDisplay">1</strong>.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -84,13 +89,10 @@
                     </div>
                 </div>
 
-                <!-- Buttons -->
-                <div class="d-grid gap-2">
+                <!-- Submit Button -->
+                <div class="d-grid">
                     <button class="btn btn-primary btn-lg" id="submitBtn" onclick="submitSchedule()" disabled>
                         Submit Availability
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearAllSelections()">
-                        Clear All
                     </button>
                 </div>
 

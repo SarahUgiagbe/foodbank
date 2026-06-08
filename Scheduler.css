@@ -23,6 +23,15 @@
   display: block;
 }
 
+/* Assigned Days Info */
+.assigned-days-info {
+  background: rgba(122, 158, 126, 0.1);
+  color: var(--muted-teal);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
 /* Availability Box */
 .availability-box {
   background: linear-gradient(135deg, var(--linen), white);
