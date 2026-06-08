@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
-    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="/static/Profile.css">
 </head>
 <body>
 
@@ -61,28 +61,24 @@
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-sm-6">
-                                <label class="form-label">First Name</label>
-                                <p class="info-value">Sarah</p>
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label">Last Name</label>
-                                <p class="info-value">Johnson</p>
+                                <label class="form-label">Full Name</label>
+                                <p class="info-value">{{ user.full_name }}</p>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">
                                     <i class="bi bi-envelope me-2 icon-golden"></i>Email Address
                                 </label>
-                                <p class="info-value">sarah.j@email.com</p>
+                                <p class="info-value">{{ user.email }}</p>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">
                                     <i class="bi bi-telephone me-2 icon-golden"></i>Phone Number
                                 </label>
-                                <p class="info-value">(555) 234-5678</p>
+                                <p class="info-value">{{ user.phone_number }}</p>
                             </div>
                             <div class="col-sm-4">
                                 <label class="form-label">Age</label>
-                                <p class="info-value">28</p>
+                                <p class="info-value">{{ user.age }}</p>
                             </div>
                         </div>
                     </div>
