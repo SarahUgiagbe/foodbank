@@ -2,6 +2,7 @@
    SCHEDULER PAGE STYLES
    ============================================ */
 
+/* Preference Box */
 .preference-box {
   background: var(--linen);
   border-radius: 15px;
@@ -10,6 +11,19 @@
   margin-bottom: 1.5rem;
 }
 
+.days-input {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--golden-bronze);
+}
+
+.preference-hint {
+  color: var(--rosy-taupe);
+  margin-top: 0.5rem;
+  display: block;
+}
+
+/* Availability Box */
 .availability-box {
   background: linear-gradient(135deg, var(--linen), white);
   border-radius: 15px;
@@ -25,11 +39,38 @@
   line-height: 1;
 }
 
+/* Alert Custom */
 .alert-custom {
   background: rgba(122, 158, 126, 0.1);
   color: var(--muted-teal);
   border: none;
   border-radius: 15px;
+}
+
+/* Validation Alert */
+.alert-validation {
+  background: rgba(185, 130, 130, 0.15);
+  color: var(--berry-blush);
+  border: 2px solid var(--berry-blush);
+  border-radius: 15px;
+}
+
+/* Footer */
+.footer-title {
+  color: var(--golden-bronze);
+  font-size: 1.25rem;
+}
+
+.footer-subtitle {
+  color: rgba(240, 230, 220, 0.6);
+  font-size: 0.9rem;
+}
+
+/* Toast Header */
+.toast-header-custom {
+  background: var(--graphite);
+  color: var(--linen);
+  border-bottom: 1px solid var(--golden-bronze);
 }
 
 /* ── CALENDAR ── */
@@ -91,6 +132,7 @@
 .calendar-weekday.weekday-open {
   color: var(--muted-teal);
 }
+
 .calendar-weekday.weekend-closed {
   color: var(--berry-blush);
 }
@@ -109,7 +151,9 @@
   color: var(--graphite);
 }
 
-.calendar-day:hover:not(.disabled):not(.selected):not(.weekend):not(.past) {
+.calendar-day:hover:not(.disabled):not(.selected):not(.weekend):not(.past):not(
+    .assigned
+  ) {
   border-color: var(--golden-bronze);
   transform: scale(1.05);
 }
@@ -121,17 +165,49 @@
   box-shadow: 0 4px 12px rgba(201, 151, 58, 0.4);
 }
 
+/* ── ASSIGNED DAY ── */
+.calendar-day.assigned {
+  background: var(--muted-teal);
+  color: white;
+  border-color: var(--muted-teal);
+  box-shadow: 0 4px 12px rgba(122, 158, 126, 0.4);
+  cursor: default;
+  position: relative;
+}
+
+.calendar-day.assigned::after {
+  content: "✓";
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.calendar-day.assigned:hover {
+  transform: none;
+  border-color: var(--muted-teal);
+}
+
+/* Today highlight */
 .calendar-day.today {
   border-color: var(--berry-blush);
   color: var(--berry-blush);
   font-weight: 700;
 }
 
+.calendar-day.today.assigned {
+  color: white;
+  border-color: var(--muted-teal);
+}
+
+/* Other month */
 .calendar-day.other-month {
   color: #bbb;
   background: #fafafa;
 }
 
+/* Weekend */
 .calendar-day.weekend {
   background: repeating-linear-gradient(
     45deg,
@@ -151,6 +227,7 @@
   letter-spacing: 0.5px;
 }
 
+/* Past days */
 .calendar-day.past {
   background: #f5f5f5;
   color: #ccc;

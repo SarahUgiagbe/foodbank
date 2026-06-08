@@ -53,6 +53,7 @@
         <div class="row g-4">
 
             <div class="col-lg-4">
+                <!-- Preference -->
                 <div class="card mb-4">
                     <div class="card-header-linen">
                         <h4 class="mb-0">Your Preference</h4>
@@ -60,16 +61,16 @@
                     <div class="card-body p-4">
                         <div class="preference-box text-center">
                             <label class="form-label d-block">How many days do you want to work?</label>
-                            <input type="number" class="form-control text-center" id="daysWanted"
-                                   min="1" max="31" value="5"
-                                   style="font-size: 1.5rem; font-weight: 600; color: var(--golden-bronze);">
-                            <small class="text-muted mt-2 d-block" style="color: var(--rosy-taupe) !important;">
+                            <input type="number" class="form-control text-center days-input" id="daysWanted"
+                                   min="1" max="31" value="5">
+                            <small class="preference-hint">
                                 This is your preference only. Select all available days on the calendar.
                             </small>
                         </div>
                     </div>
                 </div>
 
+                <!-- Availability -->
                 <div class="card mb-4">
                     <div class="card-header-bronze">
                         <h5 class="mb-0">Your Availability</h5>
@@ -83,6 +84,7 @@
                     </div>
                 </div>
 
+                <!-- Buttons -->
                 <div class="d-grid gap-2">
                     <button class="btn btn-primary btn-lg" id="submitBtn" onclick="submitSchedule()" disabled>
                         Submit Availability
@@ -92,10 +94,17 @@
                     </button>
                 </div>
 
+                <!-- Alert -->
                 <div class="alert alert-custom mt-4 d-flex align-items-center">
                     <i class="bi bi-info-circle-fill me-2"></i>
                     Click any day on the calendar to mark it available.
                     <strong class="ms-1">Saturday & Sunday — Closed.</strong>
+                </div>
+
+                <!-- Validation Message -->
+                <div class="alert alert-validation mt-3 d-none" id="validationAlert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span id="validationMessage"></span>
                 </div>
             </div>
 
@@ -127,15 +136,15 @@
     <!-- FOOTER -->
     <footer class="footer-custom text-center">
         <div class="container">
-            <p class="font-serif mb-2" style="color: var(--golden-bronze); font-size: 1.25rem;">We Share & Care Food Bank</p>
-            <p class="mb-0" style="color: rgba(240,230,220,0.6); font-size: 0.9rem;">Thank you for your dedication to our community</p>
+            <p class="font-serif mb-2 footer-title">We Share & Care Food Bank</p>
+            <p class="mb-0 footer-subtitle">Thank you for your dedication to our community</p>
         </div>
     </footer>
 
     <!-- TOAST -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="liveToast" class="toast toast-custom" role="alert">
-            <div class="toast-header" style="background: var(--graphite); color: var(--linen); border-bottom: 1px solid var(--golden-bronze);">
+            <div class="toast-header toast-header-custom">
                 <strong class="me-auto">We Share & Care Food Bank</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>

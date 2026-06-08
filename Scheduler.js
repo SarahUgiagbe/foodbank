@@ -2,10 +2,11 @@
    SCHEDULER PAGE JS
    ============================================ */
 
-let currentDate  = new Date();
-let currentMonth = currentDate.getMonth();
-let currentYear  = currentDate.getFullYear();
-let selectedDays = new Set();
+let currentDate   = new Date();
+let currentMonth  = currentDate.getMonth();
+let currentYear   = currentDate.getFullYear();
+let selectedDays  = new Set();
+let assignedDays  = new Set(); // Store assigned work days (locked)
 
 const monthNames = [
     "January","February","March","April","May","June",
@@ -53,13 +54,20 @@ function renderCalendar() {
             if (isPast) {
                 day.classList.add('past');
             } else {
-                if (selectedDays.has(dateStr)) day.classList.add('selected');
-                if (
-                    i === today.getDate() &&
-                    currentMonth === today.getMonth() &&
-                    currentYear === today.getFullYear()
-                ) day.classList.add('today');
-                day.addEventListener('click', () => toggleDay(dateStr, day));
+                // Check if day is assigned (locked)
+                if (assignedDays.has(dateStr)) {
+                    day.classList.add('assigned');
+                    // No click listener for assigned days — they are locked!
+                } else {
+                    // Normal selectable day
+                    if (selectedDays.has(dateStr)) day.classList.add('selected');
+                    if (
+                        i === today.getDate() &&
+                        currentMonth === today.getMonth() &&
+                        currentYear === today.getFullYear()
+                    ) day.classList.add('today');
+                    day.addEventListener('click', () => toggleDay(dateStr, day));
+                }
             }
         }
         grid.appendChild(day);
@@ -92,6 +100,12 @@ function formatDate(year, month, day) {
 }
 
 function toggleDay(dateStr, element) {
+    // Prevent toggling if day is assigned (locked)
+    if (assignedDays.has(dateStr)) {
+        showToast('This day is already assigned to you and cannot be changed.');
+        return;
+    }
+
     if (selectedDays.has(dateStr)) {
         selectedDays.delete(dateStr);
         element.classList.remove('selected');
@@ -100,12 +114,44 @@ function toggleDay(dateStr, element) {
         element.classList.add('selected');
     }
     updateAvailabilityDisplay();
+    validateSelection();
 }
 
 function updateAvailabilityDisplay() {
+    // Count only selected days (not assigned ones)
     document.getElementById('selectedCount').textContent = selectedDays.size;
-    document.getElementById('submitBtn').disabled = selectedDays.size === 0;
+    updateSubmitButton();
 }
+
+function validateSelection() {
+    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    const validationAlert = document.getElementById('validationAlert');
+    const validationMessage = document.getElementById('validationMessage');
+
+    if (selectedDays.size > 0 && selectedDays.size < daysWanted) {
+        validationAlert.classList.remove('d-none');
+        validationMessage.textContent = 
+            `You must select at least ${daysWanted} days (your preference). You can select more.`;
+        return false;
+    } else {
+        validationAlert.classList.add('d-none');
+        return true;
+    }
+}
+
+function updateSubmitButton() {
+    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Enable only if selected days >= days wanted (can be more)
+    submitBtn.disabled = selectedDays.size === 0 || selectedDays.size < daysWanted;
+}
+
+// Listen for preference changes
+document.getElementById('daysWanted').addEventListener('change', function() {
+    updateAvailabilityDisplay();
+    validateSelection();
+});
 
 function changeMonth(delta) {
     currentMonth += delta;
@@ -115,17 +161,25 @@ function changeMonth(delta) {
 }
 
 function clearAllSelections() {
+    // Only clear selected days, not assigned ones
     if (selectedDays.size === 0) return;
-    if (confirm('Are you sure you want to clear all selected days?')) {
+    if (confirm('Are you sure you want to clear all selected days? Assigned days will remain.')) {
         selectedDays.clear();
         renderCalendar();
         updateAvailabilityDisplay();
-        showToast('All selections cleared');
+        showToast('All selections cleared. Assigned days remain.');
     }
 }
 
 function submitSchedule() {
     const daysWanted = document.getElementById('daysWanted').value;
+    
+    // Validate minimum requirement
+    if (!validateSelection()) {
+        showToast('Please select at least ' + daysWanted + ' days.');
+        return;
+    }
+
     const sorted = Array.from(selectedDays).sort();
     const daysList = sorted.map(dateStr => {
         const [y, m, d] = dateStr.split('-');
@@ -142,8 +196,25 @@ function submitSchedule() {
         `Submit this availability?`;
 
     if (confirm(message)) {
+        // Simulate assigning days (in real app, this would come from admin)
+        // For demo: assign the first 'daysWanted' selected days
+        assignWorkDays(sorted, daysWanted);
+        
         showToast('Thank you! Your availability has been submitted.');
         console.log('Days wanted:', daysWanted);
         console.log('Available days:', sorted);
     }
+}
+
+function assignWorkDays(sortedDays, count) {
+    // Assign the first 'count' days (or all if less than count)
+    const numToAssign = Math.min(count, sortedDays.length);
+    for (let i = 0; i < numToAssign; i++) {
+        assignedDays.add(sortedDays[i]);
+        // Remove from selected since it's now assigned
+        selectedDays.delete(sortedDays[i]);
+    }
+    
+    renderCalendar(); // Re-render to show assigned styling
+    updateAvailabilityDisplay();
 }
