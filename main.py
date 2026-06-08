@@ -48,6 +48,9 @@ def get_db():
         db.close()  # Close it up when the page finishes loading to save memory
 
 
+
+#ALL BELOW CODE TO BE EDITED WHEN DATABASE IS READY! 
+
 #Fake database for testing
 fake_database = {
     1: {
@@ -79,17 +82,22 @@ def view_profile_page(request: Request): # Look! No database dependencies needed
     )
 
 
-#To view pages
+#To view pages and insert data
 @app.get("/scheduler.html", response_class=HTMLResponse)  
 def view_scheduler_page(request: Request):
     # This opens your Scheduler.html file when someone clicks the link
     return templates.TemplateResponse(request=request, name="Scheduler.html")
 
-#To view pages
 
+#To view pages and insert data
 @app.get("/contact.html", response_class=HTMLResponse)  
 def view_contact_page(request: Request):
     # This opens your Contact.html file
     return templates.TemplateResponse(request=request, name="Contact.html")
 
+#To view pages and insert data
+@app.get("/notifications.html", response_class=HTMLResponse)  
+def view_notifications_page(request: Request):
+    # This opens your Notifications.html file
+    return templates.TemplateResponse(request=request, name="Notifications.html")
 
