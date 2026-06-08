@@ -23,6 +23,7 @@ templates = Jinja2Templates(directory=".")
 # Tell FastAPI: "If the browser asks for Profile.css from this folder, just hand it over!"
 app.mount("/static", StaticFiles(directory="."), name="static")
 
+
 # ==============================================================================
 # 3. THE DATABASE CONNECTION (Setting up the pipe to PostgreSQL)
 # ==============================================================================
