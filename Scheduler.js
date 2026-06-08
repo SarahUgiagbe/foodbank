@@ -17,7 +17,6 @@ const DAY_CAPACITY = {
     5: { max: 5, current: 0 }   // Friday
 };
 
-// Track which specific dates are at capacity
 let fullDays = new Set();
 
 const monthNames = [
@@ -28,9 +27,36 @@ const WEEKEND_DAYS = [0, 6];
 
 document.addEventListener('DOMContentLoaded', function () {
     initDemoData();
+    updateAssignedDaysInfo();
     renderCalendar();
     updateAvailabilityDisplay();
 });
+
+// Update the assigned days info display and enforce min preference
+function updateAssignedDaysInfo() {
+    const assignedCount = assignedDays.size;
+    const daysWantedInput = document.getElementById('daysWanted');
+    const assignedInfo = document.getElementById('assignedDaysInfo');
+    const assignedCountDisplay = document.getElementById('assignedCountDisplay');
+    const minPreferenceDisplay = document.getElementById('minPreferenceDisplay');
+
+    if (assignedCount > 0) {
+        assignedInfo.classList.remove('d-none');
+        assignedCountDisplay.textContent = assignedCount;
+        minPreferenceDisplay.textContent = assignedCount;
+        
+        // Enforce minimum: daysWanted cannot be less than assigned days
+        const currentValue = parseInt(daysWantedInput.value) || 0;
+        if (currentValue < assignedCount) {
+            daysWantedInput.value = assignedCount;
+            showToast(`Your preference is set to ${assignedCount} because you're already assigned to ${assignedCount} day(s).`);
+        }
+        daysWantedInput.min = assignedCount;
+    } else {
+        assignedInfo.classList.add('d-none');
+        daysWantedInput.min = 1;
+    }
+}
 
 function initDemoData() {
     const demoSignups = {
@@ -87,14 +113,11 @@ function renderCalendar() {
             if (isPast) {
                 day.classList.add('past');
             } else if (assignedDays.has(dateStr)) {
-                // ASSIGNED: locked, display only
                 day.classList.add('assigned');
             } else if (fullDays.has(dateStr)) {
-                // FULL: cannot select, display only
                 day.classList.add('full');
                 day.title = "This day is full - no spots available";
             } else {
-                // AVAILABLE: selectable
                 if (selectedDays.has(dateStr)) day.classList.add('selected');
                 if (
                     i === today.getDate() &&
@@ -156,19 +179,16 @@ function formatDate(year, month, day) {
 }
 
 function toggleDay(dateStr, element) {
-    // BLOCK 1: Cannot toggle assigned days
     if (assignedDays.has(dateStr)) {
         showToast('This day is already assigned to you and cannot be changed.');
         return;
     }
 
-    // BLOCK 2: Cannot toggle full days
     if (fullDays.has(dateStr)) {
         showToast('This day is full - no spots available.');
         return;
     }
 
-    // BLOCK 3: Check if selecting this would make it full (prevent overflow)
     const dateObj = new Date(dateStr);
     const dayOfWeek = dateObj.getDay();
     const capacity = getDayCapacity(dateStr, dayOfWeek);
@@ -180,7 +200,6 @@ function toggleDay(dateStr, element) {
         return;
     }
 
-    // Toggle selection
     if (selectedDays.has(dateStr)) {
         selectedDays.delete(dateStr);
         element.classList.remove('selected');
@@ -221,7 +240,16 @@ function updateSubmitButton() {
     submitBtn.disabled = selectedDays.size === 0 || selectedDays.size < daysWanted;
 }
 
+// Enforce minimum preference when input changes
 document.getElementById('daysWanted').addEventListener('change', function() {
+    const assignedCount = assignedDays.size;
+    const currentValue = parseInt(this.value) || 0;
+    
+    if (assignedCount > 0 && currentValue < assignedCount) {
+        this.value = assignedCount;
+        showToast(`You cannot set preference below ${assignedCount} — you're already assigned to ${assignedCount} day(s).`);
+    }
+    
     updateAvailabilityDisplay();
     validateSelection();
 });
@@ -288,6 +316,7 @@ function assignWorkDays(sortedDays, count) {
         }
     }
     
+    updateAssignedDaysInfo(); // Update the info display after assignment
     renderCalendar();
     updateAvailabilityDisplay();
 }
