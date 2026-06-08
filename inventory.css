@@ -1,0 +1,313 @@
+/* ============================================
+   INVENTORY PAGE STYLES
+   ============================================ */
+
+/* Card Header Variants */
+.card-header-linen {
+  background-color: var(--linen);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(201, 151, 58, 0.2);
+}
+
+.card-header-linen h4 {
+  color: var(--graphite);
+  font-family: "Playfair Display", serif;
+}
+
+.card-header-bronze {
+  background-color: var(--golden-bronze);
+  color: var(--linen);
+  padding: 1rem 1.5rem;
+}
+
+.card-header-bronze h4 {
+  color: var(--linen);
+  font-family: "Playfair Display", serif;
+}
+
+.inventory-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+/* Dropdown Button */
+.btn-dropdown {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: var(--graphite);
+  padding: 0.375rem 0.75rem;
+}
+
+.btn-dropdown:hover,
+.btn-dropdown:focus {
+  border-color: var(--golden-bronze);
+  box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
+}
+
+/* Dropdown Menu Custom */
+.dropdown-menu {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--rosy-taupe);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item-category {
+  font-weight: 600;
+  color: var(--graphite);
+  background: var(--linen);
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgba(201, 151, 58, 0.1);
+  pointer-events: none;
+}
+
+.dropdown-item-product {
+  padding: 0.5rem 1rem 0.5rem 1.5rem;
+  color: var(--graphite);
+  cursor: pointer;
+}
+
+.dropdown-item-product:hover {
+  background: var(--linen);
+  color: var(--golden-bronze);
+}
+
+/* Table Styles */
+.inventory-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.inventory-table thead th {
+  background: var(--linen);
+  color: var(--graphite);
+  font-weight: 600;
+  border-bottom: 2px solid var(--rosy-taupe);
+  padding: 1rem;
+  white-space: nowrap;
+}
+
+.inventory-table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.inventory-table thead th.sortable:hover {
+  background: rgba(201, 151, 58, 0.1);
+}
+
+.sort-icon {
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+  color: var(--rosy-taupe);
+}
+
+.inventory-table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.inventory-table tbody tr:hover {
+  background: rgba(240, 230, 220, 0.3);
+}
+
+/* Category Badges */
+.badge-category {
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-fresh {
+  background: rgba(122, 158, 126, 0.15);
+  color: var(--muted-teal);
+}
+
+.badge-refrigerated {
+  background: rgba(185, 130, 130, 0.15);
+  color: var(--berry-blush);
+}
+
+.badge-drink {
+  background: rgba(185, 130, 130, 0.15);
+  color: var(--berry-blush);
+}
+
+.badge-canned {
+  background: rgba(201, 151, 58, 0.15);
+  color: var(--golden-bronze);
+}
+
+/* Status Badges */
+.badge-status {
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-critical {
+  background: rgba(185, 130, 130, 0.15);
+  color: var(--berry-blush);
+}
+
+.status-warning {
+  background: rgba(201, 151, 58, 0.15);
+  color: var(--golden-bronze);
+}
+
+.status-good {
+  background: rgba(122, 158, 126, 0.15);
+  color: var(--muted-teal);
+}
+
+/* Quantity Controls */
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-quantity {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-decrement {
+  background: var(--berry-blush);
+}
+
+.btn-decrement:hover {
+  background: #a06060;
+}
+
+.btn-increment {
+  background: var(--muted-teal);
+}
+
+.btn-increment:hover {
+  background: #5a7a5e;
+}
+
+.quantity-input {
+  width: 60px;
+  text-align: center;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.25rem;
+  font-weight: 600;
+  color: var(--graphite);
+}
+
+.quantity-input:focus {
+  border-color: var(--golden-bronze);
+  box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
+  outline: none;
+}
+
+/* Active Filters */
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(124, 77, 110, 0.1);
+  color: var(--berry-blush);
+  border-radius: 50px;
+  font-size: 0.85rem;
+}
+
+.filter-badge button {
+  background: none;
+  border: none;
+  color: var(--berry-blush);
+  padding: 0;
+  line-height: 1;
+}
+
+.filter-badge button:hover {
+  color: var(--graphite);
+}
+
+.btn-clear-filters {
+  font-size: 0.85rem;
+  color: var(--rosy-taupe);
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.btn-clear-filters:hover {
+  color: var(--graphite);
+}
+
+/* Update Message */
+.update-message {
+  color: var(--muted-teal);
+  font-weight: 600;
+}
+
+/* Empty State */
+#emptyState i {
+  color: var(--rosy-taupe);
+}
+
+/* Footer */
+.footer-title {
+  color: var(--golden-bronze);
+  font-size: 1.25rem;
+}
+
+.footer-subtitle {
+  color: rgba(240, 230, 220, 0.6);
+  font-size: 0.9rem;
+}
+
+/* Toast Header */
+.toast-header-custom {
+  background: var(--graphite);
+  color: var(--linen);
+  border-bottom: 1px solid var(--golden-bronze);
+}
+
+/* Form Focus States */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--golden-bronze);
+  box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
+}
+
+/* Input Group */
+.input-group-text {
+  border-color: #dee2e6;
+}
+
+/* Date Input */
+input[type="date"] {
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
