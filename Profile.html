@@ -95,7 +95,7 @@
                         <div class="avatar-circle">
                             <i class="bi bi-person-fill"></i>
                         </div>
-                        <h4 class="mb-1">Sarah Johnson</h4>
+                        <h4 class="mb-1">{{ user.full_name }}</h4>
                         <div class="mb-3">
                             <span class="badge-volunteer">
                                 <i class="bi bi-patch-check-fill me-1"></i> Volunteer
@@ -103,24 +103,17 @@
                         </div>
                         <div class="text-start mt-3">
                             <div class="info-row">
-                                <i class="bi bi-calendar3"></i>
-                                <div>
-                                    <div class="info-label">Joined</div>
-                                    <div>January 2025</div>
-                                </div>
-                            </div>
-                            <div class="info-row">
                                 <i class="bi bi-envelope"></i>
                                 <div>
                                     <div class="info-label">Email</div>
-                                    <div>sarah.j@email.com</div>
+                                    <div>{{ user.email }}</div>
                                 </div>
                             </div>
                             <div class="info-row">
                                 <i class="bi bi-telephone"></i>
                                 <div>
                                     <div class="info-label">Phone</div>
-                                    <div>(555) 234-5678</div>
+                                    <div>{{ user.phone_number }}</div>
                                 </div>
                             </div>
                         </div>
