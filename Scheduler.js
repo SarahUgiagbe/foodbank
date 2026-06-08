@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
     updateAvailabilityDisplay();
 });
 
-// Update the assigned days info display and enforce min preference
 function updateAssignedDaysInfo() {
     const assignedCount = assignedDays.size;
     const daysWantedInput = document.getElementById('daysWanted');
@@ -45,7 +44,6 @@ function updateAssignedDaysInfo() {
         assignedCountDisplay.textContent = assignedCount;
         minPreferenceDisplay.textContent = assignedCount;
         
-        // Enforce minimum: daysWanted cannot be less than assigned days
         const currentValue = parseInt(daysWantedInput.value) || 0;
         if (currentValue < assignedCount) {
             daysWantedInput.value = assignedCount;
@@ -240,7 +238,6 @@ function updateSubmitButton() {
     submitBtn.disabled = selectedDays.size === 0 || selectedDays.size < daysWanted;
 }
 
-// Enforce minimum preference when input changes
 document.getElementById('daysWanted').addEventListener('change', function() {
     const assignedCount = assignedDays.size;
     const currentValue = parseInt(this.value) || 0;
@@ -259,16 +256,6 @@ function changeMonth(delta) {
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
     renderCalendar();
-}
-
-function clearAllSelections() {
-    if (selectedDays.size === 0) return;
-    if (confirm('Are you sure you want to clear all selected days? Assigned days will remain.')) {
-        selectedDays.clear();
-        renderCalendar();
-        updateAvailabilityDisplay();
-        showToast('All selections cleared. Assigned days remain.');
-    }
 }
 
 function submitSchedule() {
@@ -316,7 +303,7 @@ function assignWorkDays(sortedDays, count) {
         }
     }
     
-    updateAssignedDaysInfo(); // Update the info display after assignment
+    updateAssignedDaysInfo();
     renderCalendar();
     updateAvailabilityDisplay();
 }
