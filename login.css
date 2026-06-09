@@ -1,0 +1,185 @@
+/* ============================================
+   LOGIN PAGE STYLES
+   ============================================ */
+
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--linen) 0%, #f5efe6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 40px rgba(51, 51, 51, 0.1);
+  border: 2px solid var(--linen);
+}
+
+/* Brand */
+.login-brand {
+  margin-bottom: 2rem;
+}
+
+.brand-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--golden-bronze);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.brand-icon i {
+  font-size: 2rem;
+  color: white;
+}
+
+.brand-title {
+  color: var(--graphite);
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.brand-subtitle {
+  color: var(--rosy-taupe);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Form */
+.login-form .form-label {
+  color: var(--muted-teal);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.login-form .input-group-text {
+  border-color: #dee2e6;
+  padding-left: 1rem;
+}
+
+.login-form .form-control {
+  border-color: #dee2e6;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.95rem;
+}
+
+.login-form .form-control:focus {
+  border-color: var(--golden-bronze);
+  box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
+}
+
+.btn-toggle-password {
+  border: 1px solid #dee2e6;
+  border-left: none;
+  background: white;
+  color: var(--rosy-taupe);
+  padding: 0 0.75rem;
+}
+
+.btn-toggle-password:hover {
+  color: var(--graphite);
+}
+
+.form-check-label {
+  color: var(--rosy-taupe);
+  font-size: 0.85rem;
+}
+
+.forgot-link {
+  color: var(--golden-bronze);
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-link:hover {
+  color: var(--berry-blush);
+  text-decoration: underline;
+}
+
+/* Login Button */
+.btn-login {
+  background: var(--golden-bronze);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+  background: var(--berry-blush);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(185, 130, 130, 0.3);
+}
+
+/* Roles Info */
+.login-roles {
+  padding-top: 1rem;
+  border-top: 1px solid var(--linen);
+}
+
+.roles-text {
+  color: var(--rosy-taupe);
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+.roles-text strong {
+  color: var(--muted-teal);
+}
+
+/* Login Footer */
+.login-footer {
+  margin-top: 2rem;
+  color: var(--rosy-taupe);
+  font-size: 0.9rem;
+}
+
+.login-footer p {
+  font-family: "Playfair Display", serif;
+  color: var(--golden-bronze);
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.login-footer small {
+  font-size: 0.8rem;
+}
+
+/* Toast */
+.toast-header-custom {
+  background: var(--graphite);
+  color: var(--linen);
+  border-bottom: 1px solid var(--golden-bronze);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-page {
+    padding: 1rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+  }
+}
