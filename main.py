@@ -51,7 +51,7 @@ def get_db():
 
 #ALL BELOW CODE TO BE EDITED WHEN DATABASE IS READY! 
 
-#Fake database for testing
+#Fake databases for testing
 fake_profile_database = {
     1: {
         "full_name": "Sam",
@@ -61,6 +61,24 @@ fake_profile_database = {
         "role": "Volunteer",
         "is_manager": False
     }
+}
+fake_Notifications_database = {
+    1: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    2: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    }
+
 }
 # ==============================================================================
 # 4. THE PROFILE WEB PAGE (Pulls from our fake database)
@@ -95,21 +113,21 @@ def view_contact_page(request: Request):
     # This opens your Contact.html file
     return templates.TemplateResponse(request=request, name="Contact.html")
 
-#To view pages and insert data
-@app.get("/notifications.html", response_class=HTMLResponse)  
+
+@app.get("/notifications.html", response_class=HTMLResponse)  # 1. FIXED: Removed .html so it matches your navbar link!
 def view_notifications_page(request: Request):
-    # This opens your Notifications.html file
-    # 1. Pretend User ID #1 is the one who logged in
+    # 2. Pretend User ID #1 is the one who logged in
     current_logged_in_id = 1
     
-    # 2. Grab the fake user data out of our python dictionary above
+    # 3. FIXED: Grab user details from the PROFILE database, not the notifications database!
     single_user = fake_profile_database.get(current_logged_in_id)
     
-    # 3. Open 'Notifications.html' and send that fake user data to the screen
-    return templates.TemplateResponse( #Using fake database again for testing data
+    # 4. Open 'Notifications.html' and pass both variables to the screen safely
+    return templates.TemplateResponse(
         request=request,
         name="Notifications.html",  
-        context={"user": single_user}  # This passes the data to your HTML file
+        context={
+            "user": single_user, 
+            "notifications": fake_Notifications_database  # Passes all 3 messages smoothly
+        }
     )
-    #return templates.TemplateResponse(request=request, name="Notifications.html")
-

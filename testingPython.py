@@ -40,3 +40,22 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
         name="Profile.html",  
         context={"user": single_user}  # Passing just ONE user item instead of a list
     )
+
+
+#To view pages and insert data
+@app.get("/notifications.html", response_class=HTMLResponse)  
+def view_notifications_page(request: Request):
+    # This opens your Notifications.html file
+    # 1. Pretend User ID #1 is the one who logged in
+    current_logged_in_id = 1
+    
+    # 2. Grab the fake user data out of our python dictionary above
+    single_user = fake_profile_database.get(current_logged_in_id)
+    
+    # 3. Open 'Notifications.html' and send that fake user data to the screen
+    return templates.TemplateResponse( #Using fake database again for testing data
+        request=request,
+        name="Notifications.html",  
+        context={"user": single_user}  # This passes the data to your HTML file
+    )
+    #return templates.TemplateResponse(request=request, name="Notifications.html")

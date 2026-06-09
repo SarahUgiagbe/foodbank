@@ -101,7 +101,7 @@
        const MAX_NOTIFICATIONS = 7;
         //Loop needed here for creating notifications list using Database
         let notifications = [
-            { id: 1, type: "shift", title: "Shift Reminder",          message: "{{user.full_name}}, you have a shift tomorrow (Tuesday, June 3) from 9am-1pm", time: "2 hours ago", read: false },
+            { id: 1, type: "shift", title: "Shift Reminder",          message: "{{ notifications[1].message_type }}", time: "2 hours ago", read: false },
             { id: 2, type: "alert", title: "Urgent: Volunteers Needed", message: "We need 2 more volunteers for Friday. Can you join us?",  time: "2 days ago",  read: true  },
             { id: 3, type: "shift", title: "Shift Approved",           message: "Your availability for this week has been approved",        time: "3 days ago",  read: true  },
             { id: 4, type: "alert", title: "New Shift Available",      message: "A new shift opened up for next Monday. Claim it now!",     time: "5 days ago",  read: false }
