@@ -78,27 +78,6 @@ fake_Notifications_database = {
         "message": "This is the message of the notification",
         "time": "2 hours ago",
     },
-    3: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-    3: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-        3: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-        3: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    }
-
 }
 # ==============================================================================
 # 4. THE PROFILE WEB PAGE (Pulls from our fake database)
