@@ -66,7 +66,7 @@ fake_database = {
 # 4. THE PROFILE WEB PAGE (Pulls from our fake database)
 # ==============================================================================
 @app.get("/profile.html", response_class=HTMLResponse)  
-def view_profile_page(request: Request): # Look! No database dependencies needed anymore!
+def view_profile_page(request: Request): 
     
     # 1. Pretend User ID #1 is the one who logged in
     current_logged_in_id = 1
