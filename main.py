@@ -77,6 +77,26 @@ fake_Notifications_database = {
         "message_type": "Shift Reminder",
         "message": "This is the message of the notification",
         "time": "2 hours ago",
+    },
+    3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+        3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+        3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
     }
 
 }
