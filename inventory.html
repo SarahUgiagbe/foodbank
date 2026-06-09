@@ -31,7 +31,7 @@
                         <a class="nav-link" href="contact.html">Contact</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="inventory.html">Inventory</a>
+                        <a class="nav-link active" href="inventory.html">Inventory</a>
                     </li>
                     <li class="nav-item ms-3">
                         <a class="nav-link" href="profile.html" title="Profile">
@@ -60,44 +60,59 @@
                 <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Add New Donation</h4>
             </div>
             <div class="card-body p-4">
-                <form id="addDonationForm" class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                <form id="addDonationForm">
+                    
+                    <!-- Row 1: Product Name (full width) -->
+                    <div class="mb-3">
                         <label class="form-label">Product Name</label>
-                        <div class="dropdown">
-                            <button class="btn btn-dropdown w-100 text-start" type="button" id="productDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span id="selectedProductText">Select product</span>
-                                <i class="bi bi-chevron-down float-end mt-1"></i>
-                            </button>
-                            <ul class="dropdown-menu w-100" id="productDropdownMenu">
-                                <!-- Populated by JS -->
-                            </ul>
+                        <input type="text" class="form-control form-control-lg" id="formProductName" placeholder="e.g. Bananas, Milk, Rice..." required>
+                    </div>
+
+                    <!-- Row 2: Quantity + Unit (grouped together) -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="formQuantity" placeholder="Enter amount" min="0.01" step="0.01" required>
                         </div>
-                        <input type="hidden" id="formProductName" value="">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" id="formCategory">
-                            <option value="">Category</option>
-                            <option value="fresh">Fresh</option>
-                            <option value="refrigerated">Refrigerated</option>
-                            <option value="drink">Drink</option>
-                            <option value="canned">Canned</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="formQuantity" placeholder="Quantity" min="1">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Expiry Date</label>
-                        <div class="position-relative">
-                            <input type="date" class="form-control" id="formExpiryDate" min="">
-                            <i class="bi bi-calendar3 position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                        <div class="col-md-6">
+                            <label class="form-label">Unit</label>
+                            <select class="form-select" id="formUnit" required>
+                                <option value="" disabled selected>Select unit</option>
+                                <option value="kg">kg</option>
+                                <option value="g">g</option>
+                                <option value="L">L</option>
+                                <option value="ml">ml</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-lg me-1"></i>Add to Inventory
+
+                    <!-- Row 3: Category + Expiry Date (grouped together) -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="formCategory" required>
+                                <option value="" disabled selected>Select category</option>
+                                <option value="fresh">Fresh</option>
+                                <option value="refrigerated">Refrigerated</option>
+                                <option value="drink">Drink</option>
+                                <option value="canned">Canned</option>
+                                <option value="dry">Dry Goods</option>
+                                <option value="frozen">Frozen</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <div class="position-relative">
+                                <input type="date" class="form-control" id="formExpiryDate" required>
+                                <i class="bi bi-calendar3 position-absolute top-50 end-0 translate-middle-y me-3 text-muted calendar-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-lg me-2"></i>Add to Inventory
                         </button>
                     </div>
                 </form>
@@ -129,6 +144,8 @@
                             <option value="refrigerated">Refrigerated</option>
                             <option value="drink">Drink</option>
                             <option value="canned">Canned</option>
+                            <option value="dry">Dry Goods</option>
+                            <option value="frozen">Frozen</option>
                         </select>
                     </div>
                     <div class="col-md-5 text-md-end" id="activeFilters">
