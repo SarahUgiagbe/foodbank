@@ -1,4 +1,5 @@
-# ==============================================================================
+#NEED TO FIND WAY FOR BROWSER TO KEEP USER IDENTITY SO ALL INFO IS UNIQUES. CHANGE IN @app.gets
+#  ==============================================================================
 # 1. THE TOOLS (Loading the packages we need)
 # ==============================================================================
 import os  # PYTHON: Lets Python talk to your computer's operating system
@@ -62,6 +63,19 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Base template for our blueprint class
 Base = declarative_base()
 
+class UserProfile(Base):
+    __tablename__ = "users"  # Tells Python to search your "users" table
+
+    user_id = Column(Integer, primary_key=True)
+    full_name = Column(String)
+    email = Column(String)
+    password_hash = Column(String)
+    phone_number = Column(String)
+    role = Column(String)
+    is_manager = Column(Boolean)
+    age = Column(Integer)
+
+
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
     db = SessionLocal()  # Open the connection workspace
@@ -72,51 +86,8 @@ def get_db():
 
 
 
-#ALL BELOW CODE TO BE EDITED WHEN DATABASE IS READY! 
-# 1. Query JUST the row matching the logged-in ID
-#user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
-
-# 2. Build the nested dictionary structure for just this one user
-#profile_data = {}
-
-#if user:  # Safety check to make sure the user actually exists in Postgres
-#    profile_data[current_logged_in_id] = {
-#        "user_id": user.user_id,
-#        "full_name": user.full_name,
-#        "email": user.email,
-#        "password": user.password_hash, 
-#        "phone_number": user.phone_number,
-#        "role": user.role,
-#        "is_manager": user.is_manager,
-#        "age": user.age
-#    }
 
 
-
-
-#TESTING
-profile_data = {
-    1: {
-        "user_id": 1,
-        "full_name": "Sam",
-        "email": "Sam@email.com",
-        "password": "password",
-        "phone_number": "+31 6 12345678",
-        "role": "Volunteer",
-        "is_manager": False,
-        "age": 21,
-    },
-    2: {
-        "user_id": 2,
-        "full_name": "Bob",
-        "email": "Bob@email.com",
-        "password": "password2",
-        "phone_number": "+31 6 12345678",
-        "role": "Volunteer",
-        "is_manager": True,
-        "age": 21,
-    }
-}
 
 
 #Search database for messages related to user ID Make function
@@ -158,23 +129,34 @@ notifications_data = {
         "time": "2 hours ago",
     },
 }
-# ==============================================================================
-# 4. THE PROFILE WEB PAGE (Pulls from our fake database)
-# ==============================================================================
 @app.get("/profile.html", response_class=HTMLResponse)  
-def view_profile_page(request: Request): 
+def view_profile_page(request: Request, db: Session = Depends(get_db)): # 1. Added ', db: Session = Depends(get_db)'
     
-    # 1. Pretend User ID #1 is the one who logged in
     current_logged_in_id = 1
     
-    # 2. Grab the fake user data out of our python dictionary above
+    # 2. MOVED QUERY INSIDE: Fetches User 1 right when the page loads
+    user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
+
+    # 3. MOVED DICTIONARY BUILDER INSIDE
+    profile_data = {}
+    if user:  
+        profile_data[current_logged_in_id] = {
+            "user_id": user.user_id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "password": user.password_hash, 
+            "phone_number": user.phone_number,
+            "role": user.role,
+            "is_manager": user.is_manager,
+            "age": user.age
+        }
+    
     single_user = profile_data.get(current_logged_in_id)
     
-    # 3. Open 'Profile.html' and send that fake user data to the screen
     return templates.TemplateResponse(
         request=request,
         name="Profile.html",  
-        context={"user": single_user}  # This passes the data to your HTML file
+        context={"user": single_user}  
     )
 
 
@@ -197,23 +179,39 @@ def view_notifications_page(request: Request):
     # 2. Pretend User ID #1 is the one who logged in
     current_logged_in_id = 1
     
-    # 3. FIXED: Grab user details from the PROFILE database, not the notifications database!
-    single_user = profile_data.get(current_logged_in_id)
     
     # 4. Open 'Notifications.html' and pass both variables to the screen safely
     return templates.TemplateResponse(
         request=request,
         name="Notifications.html",
         context={
-            "user": single_user, 
             "notifications_data": notifications_data  
         }
     )
 
 #Login Page
+# Login Page
+# Login Page
 @app.get("/login.html", response_class=HTMLResponse)  
-def view_login_page(request: Request):
-    # This opens your Login.html file
+def view_login_page(request: Request, db: Session = Depends(get_db)):
+    
+    # 1. Fetch ALL user rows from your Azure database table
+    db_users = db.query(UserProfile).all()
+
+    # 2. Loop through all database users to build the full profile_data dictionary
+    profile_data = {}
+    for user in db_users:
+        profile_data[user.user_id] = {
+            "user_id": user.user_id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "password": user.password_hash, 
+            "phone_number": user.phone_number,
+            "role": user.role,
+            "is_manager": user.is_manager,
+            "age": user.age
+        }
+    # 3. Pass the complete dictionary containing everyone over to Login.html
     return templates.TemplateResponse(
         request=request,
         name="Login.html",
@@ -228,3 +226,9 @@ def view_login_page(request: Request):
 def view_inventory_page(request: Request):
     # This opens your Inventory.html file
     return templates.TemplateResponse(request=request, name="Inventory.html")
+
+#hashedpassword1
+#hashedpassword2
+#hashedpassword3
+#hashedpassword4
+#hashedpassword5

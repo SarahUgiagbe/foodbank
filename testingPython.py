@@ -59,3 +59,28 @@ def view_notifications_page(request: Request):
         context={"user": single_user}  # This passes the data to your HTML file
     )
     #return templates.TemplateResponse(request=request, name="Notifications.html")
+
+
+#TESTING
+profile_data = {
+    1: {
+        "user_id": 1,
+        "full_name": "Sam",
+        "email": "Sam@email.com",
+        "password": "password",
+        "phone_number": "+31 6 12345678",
+        "role": "Volunteer",
+        "is_manager": False,
+        "age": 21,
+    },
+    2: {
+        "user_id": 2,
+        "full_name": "Bob",
+        "email": "Bob@email.com",
+        "password": "password2",
+        "phone_number": "+31 6 12345678",
+        "role": "Volunteer",
+        "is_manager": True,
+        "age": 21,
+    }
+}
