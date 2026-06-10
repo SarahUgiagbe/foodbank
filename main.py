@@ -50,8 +50,28 @@ def get_db():
 
 
 #ALL BELOW CODE TO BE EDITED WHEN DATABASE IS READY! 
+# 1. Query JUST the row matching the logged-in ID
+#user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
 
-#Insert database stuff here
+# 2. Build the nested dictionary structure for just this one user
+#profile_data = {}
+
+#if user:  # Safety check to make sure the user actually exists in Postgres
+#    profile_data[current_logged_in_id] = {
+#        "user_id": user.user_id,
+#        "full_name": user.full_name,
+#        "email": user.email,
+#        "password": user.password_hash, 
+#        "phone_number": user.phone_number,
+#        "role": user.role,
+#        "is_manager": user.is_manager,
+#        "age": user.age
+#    }
+
+
+
+
+#TESTING
 profile_data = {
     1: {
         "user_id": 1,
@@ -62,7 +82,18 @@ profile_data = {
         "role": "Volunteer",
         "is_manager": False,
         "age": 21,
+    },
+    2: {
+        "user_id": 2,
+        "full_name": "Bob",
+        "email": "Bob@email.com",
+        "password": "password",
+        "phone_number": "+31 6 12345678",
+        "role": "Volunteer",
+        "is_manager": True,
+        "age": 21,
     }
+
 }
 
 
@@ -101,7 +132,7 @@ notifications_data = {
     },
     7: {
         "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
+        "message": "This is the ",
         "time": "2 hours ago",
     },
 }
@@ -153,9 +184,10 @@ def view_notifications_page(request: Request):
         name="Notifications.html",  
         context={
             "user": single_user, 
-            "notifications": notifications_data  # Passes all 3 messages smoothly
+            "notifications_data": notifications_data  
         }
     )
+<<<<<<< HEAD
     
     
     
@@ -239,3 +271,11 @@ def view_notifications_page(request: Request):
 def view_inventory_page(request: Request):
     # This opens your Contact.html file
     return templates.TemplateResponse(request=request, name="Inventory.html")
+=======
+
+#Login Page
+@app.get("/login.html", response_class=HTMLResponse)  
+def view_login_page(request: Request):
+    # This opens your Login.html file
+    return templates.TemplateResponse(request=request, name="Login.html")
+>>>>>>> 713ca0c93fb255389ec9319d82fe0203d1e086b5
