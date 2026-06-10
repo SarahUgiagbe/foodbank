@@ -82,7 +82,18 @@ profile_data = {
         "role": "Volunteer",
         "is_manager": False,
         "age": 21,
+    },
+    2: {
+        "user_id": 2,
+        "full_name": "Bob",
+        "email": "Bob@email.com",
+        "password": "password",
+        "phone_number": "+31 6 12345678",
+        "role": "Volunteer",
+        "is_manager": True,
+        "age": 21,
     }
+
 }
 
 
@@ -121,7 +132,7 @@ notifications_data = {
     },
     7: {
         "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
+        "message": "This is the ",
         "time": "2 hours ago",
     },
 }
@@ -173,6 +184,12 @@ def view_notifications_page(request: Request):
         name="Notifications.html",  
         context={
             "user": single_user, 
-            "notifications": notifications_data  # Passes all 3 messages smoothly
+            "notifications_data": notifications_data  
         }
     )
+
+#Login Page
+@app.get("/login.html", response_class=HTMLResponse)  
+def view_login_page(request: Request):
+    # This opens your Login.html file
+    return templates.TemplateResponse(request=request, name="Login.html")

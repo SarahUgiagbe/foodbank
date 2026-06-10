@@ -94,15 +94,14 @@
         </div>
     </div>
 
-    <!-- Hidden element to pass notification data from Jinja2 to JavaScript -->
     <div id="notificationData" style="display: none;">
-        {% for key, n in notifications.items() %}
+        {% for key, n in notifications_data.items() %}
         <div class="notification-item"
-             data-id="{{ key }}"
-             data-type="{{ n.message_type|lower }}"
-             data-title="{{ n.message_type }}"
-             data-message="{{ n.message }}"
-             data-time="{{ n.time }}"></div>
+            data-id="{{ key }}"
+            data-type="{{ n.message_type | lower }}"
+            data-title="{{ n.message_type }}"
+            data-message="{{ n.message }}"
+            data-time="{{ n.time }}"></div>
         {% endfor %}
     </div>
 
