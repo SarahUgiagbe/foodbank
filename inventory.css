@@ -231,14 +231,6 @@
   outline: none;
 }
 
-/* Unit Display */
-.unit-display {
-  color: var(--rosy-taupe);
-  font-size: 0.85rem;
-  font-weight: 500;
-  min-width: 25px;
-}
-
 /* Active Filters */
 .filter-badge {
   display: inline-flex;
@@ -302,6 +294,13 @@
   background: var(--graphite);
   color: var(--linen);
   border-bottom: 1px solid var(--golden-bronze);
+}
+
+/* Form Focus States */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--golden-bronze);
+  box-shadow: 0 0 0 0.2rem rgba(201, 151, 58, 0.25);
 }
 
 /* Input Group */

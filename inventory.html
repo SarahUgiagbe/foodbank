@@ -68,26 +68,12 @@
                         <input type="text" class="form-control form-control-lg" id="formProductName" placeholder="e.g. Bananas, Milk, Rice..." required>
                     </div>
 
-                    <!-- Row 2: Quantity + Unit (grouped together) -->
+                    <!-- Row 2: Quantity + Category (grouped together) -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="formQuantity" placeholder="Enter amount" min="0.01" step="0.01" required>
+                            <input type="number" class="form-control" id="formQuantity" placeholder="Enter amount" min="1" step="1" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Unit</label>
-                            <select class="form-select" id="formUnit" required>
-                                <option value="" disabled selected>Select unit</option>
-                                <option value="kg">kg</option>
-                                <option value="g">g</option>
-                                <option value="L">L</option>
-                                <option value="ml">ml</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Row 3: Category + Expiry Date (grouped together) -->
-                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Category</label>
                             <select class="form-select" id="formCategory" required>
@@ -100,12 +86,14 @@
                                 <option value="frozen">Frozen</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Expiry Date</label>
-                            <div class="position-relative">
-                                <input type="date" class="form-control" id="formExpiryDate" required>
-                                <i class="bi bi-calendar3 position-absolute top-50 end-0 translate-middle-y me-3 text-muted calendar-icon"></i>
-                            </div>
+                    </div>
+
+                    <!-- Row 3: Expiry Date (full width) -->
+                    <div class="mb-4">
+                        <label class="form-label">Expiry Date</label>
+                        <div class="position-relative">
+                            <input type="date" class="form-control" id="formExpiryDate" required>
+                            <i class="bi bi-calendar3 position-absolute top-50 end-0 translate-middle-y me-3 text-muted calendar-icon"></i>
                         </div>
                     </div>
 
@@ -225,21 +213,21 @@
 </body>
 </html>
 <script>
-    /* ============================================
+  /* ============================================
    INVENTORY PAGE JS
    ============================================ */
 
 let inventory = [
-  { id: 1, productName: 'Bananas', unit: 'kg', category: 'fresh', quantity: 30, expiryDate: '2026-06-03', daysLeft: 2 },
-  { id: 2, productName: 'Apples', unit: 'kg', category: 'fresh', quantity: 50, expiryDate: '2026-06-05', daysLeft: 4 },
-  { id: 3, productName: 'Milk', unit: 'L', category: 'refrigerated', quantity: 24, expiryDate: '2026-06-07', daysLeft: 6 },
-  { id: 4, productName: 'Orange Juice', unit: 'L', category: 'drink', quantity: 36, expiryDate: '2026-06-10', daysLeft: 9 },
-  { id: 5, productName: 'Canned Beans', unit: 'g', category: 'canned', quantity: 400, expiryDate: '2027-03-15', daysLeft: 274 },
-  { id: 6, productName: 'Bananas', unit: 'kg', category: 'fresh', quantity: 20, expiryDate: '2026-06-08', daysLeft: 7 },
-  { id: 7, productName: 'Apples', unit: 'kg', category: 'fresh', quantity: 35, expiryDate: '2026-06-12', daysLeft: 11 },
-  { id: 8, productName: 'Milk', unit: 'ml', category: 'refrigerated', quantity: 500, expiryDate: '2026-06-04', daysLeft: 3 },
-  { id: 9, productName: 'Orange Juice', unit: 'L', category: 'drink', quantity: 42, expiryDate: '2026-06-15', daysLeft: 14 },
-  { id: 10, productName: 'Canned Beans', unit: 'g', category: 'canned', quantity: 200, expiryDate: '2027-04-20', daysLeft: 305 },
+  { id: 1, productName: 'Bananas', category: 'fresh', quantity: 30, expiryDate: '2026-06-03', daysLeft: 2 },
+  { id: 2, productName: 'Apples', category: 'fresh', quantity: 50, expiryDate: '2026-06-05', daysLeft: 4 },
+  { id: 3, productName: 'Milk', category: 'refrigerated', quantity: 24, expiryDate: '2026-06-07', daysLeft: 6 },
+  { id: 4, productName: 'Orange Juice', category: 'drink', quantity: 36, expiryDate: '2026-06-10', daysLeft: 9 },
+  { id: 5, productName: 'Canned Beans', category: 'canned', quantity: 400, expiryDate: '2027-03-15', daysLeft: 274 },
+  { id: 6, productName: 'Bananas', category: 'fresh', quantity: 20, expiryDate: '2026-06-08', daysLeft: 7 },
+  { id: 7, productName: 'Apples', category: 'fresh', quantity: 35, expiryDate: '2026-06-12', daysLeft: 11 },
+  { id: 8, productName: 'Milk', category: 'refrigerated', quantity: 500, expiryDate: '2026-06-04', daysLeft: 3 },
+  { id: 9, productName: 'Orange Juice', category: 'drink', quantity: 42, expiryDate: '2026-06-15', daysLeft: 14 },
+  { id: 10, productName: 'Canned Beans', category: 'canned', quantity: 200, expiryDate: '2027-04-20', daysLeft: 305 },
 ];
 
 let sortField = null;
@@ -366,11 +354,10 @@ function renderInventoryTable() {
             <i class="bi bi-dash"></i>
           </button>
           <input type="number" class="quantity-input" value="${item.quantity}" 
-                 onchange="updateQuantity(${item.id}, this.value)" min="0" step="0.01">
+                 onchange="updateQuantity(${item.id}, this.value)" min="0" step="1">
           <button class="btn-quantity btn-increment" onclick="incrementQuantity(${item.id})">
             <i class="bi bi-plus"></i>
           </button>
-          <span class="unit-display">${item.unit}</span>
         </div>
       </td>
     </tr>
@@ -464,7 +451,7 @@ function decrementQuantity(id) {
 function updateQuantity(id, value) {
   const item = inventory.find(i => i.id === id);
   if (item) {
-    const newQuantity = parseFloat(value) || 0;
+    const newQuantity = parseInt(value) || 0;
     if (newQuantity <= 0) {
       removeItem(id);
     } else {
@@ -478,12 +465,11 @@ function handleAddDonation(e) {
   e.preventDefault();
   
   const productName = document.getElementById('formProductName').value.trim();
-  const quantity = parseFloat(document.getElementById('formQuantity').value) || 0;
-  const unit = document.getElementById('formUnit').value;
+  const quantity = parseInt(document.getElementById('formQuantity').value) || 0;
   const category = document.getElementById('formCategory').value;
   const expiryDate = document.getElementById('formExpiryDate').value;
   
-  if (!productName || !quantity || !unit || !category || !expiryDate) {
+  if (!productName || !quantity || !category || !expiryDate) {
     showToast('Please fill in all fields.');
     return;
   }
@@ -496,7 +482,6 @@ function handleAddDonation(e) {
   const newItem = {
     id: Date.now(),
     productName,
-    unit,
     category,
     quantity,
     expiryDate,
@@ -510,7 +495,7 @@ function handleAddDonation(e) {
   sortDirection = 'asc';
   
   renderInventoryTable();
-  showToast(`${productName} (${quantity} ${unit}) added to inventory!`);
+  showToast(`${productName} (${quantity}) added to inventory!`);
 }
 
 function submitUpdates() {
@@ -522,5 +507,3 @@ function submitUpdates() {
   showToast('Inventory updates saved successfully!');
 }
 </script>
-</body>
-</html>
