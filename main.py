@@ -50,8 +50,28 @@ def get_db():
 
 
 #ALL BELOW CODE TO BE EDITED WHEN DATABASE IS READY! 
+# 1. Query JUST the row matching the logged-in ID
+#user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
 
-#Insert database stuff here
+# 2. Build the nested dictionary structure for just this one user
+#profile_data = {}
+
+#if user:  # Safety check to make sure the user actually exists in Postgres
+#    profile_data[current_logged_in_id] = {
+#        "user_id": user.user_id,
+#        "full_name": user.full_name,
+#        "email": user.email,
+#        "password": user.password_hash, 
+#        "phone_number": user.phone_number,
+#        "role": user.role,
+#        "is_manager": user.is_manager,
+#        "age": user.age
+#    }
+
+
+
+
+#TESTING
 profile_data = {
     1: {
         "user_id": 1,
