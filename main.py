@@ -87,13 +87,12 @@ profile_data = {
         "user_id": 2,
         "full_name": "Bob",
         "email": "Bob@email.com",
-        "password": "password",
+        "password": "password2",
         "phone_number": "+31 6 12345678",
         "role": "Volunteer",
         "is_manager": True,
         "age": 21,
     }
-
 }
 
 
@@ -101,9 +100,9 @@ profile_data = {
 #Get Oche to add "Message Type"
 notifications_data = {
     1: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
+        "message_type": "You're Great Reminder",
+        "message": "This is a message",
+        "time": "1 day ago",
     },
     2: {
         "message_type": "Shift Reminder",
@@ -181,7 +180,7 @@ def view_notifications_page(request: Request):
     # 4. Open 'Notifications.html' and pass both variables to the screen safely
     return templates.TemplateResponse(
         request=request,
-        name="Notifications.html",  
+        name="Notifications.html",
         context={
             "user": single_user, 
             "notifications_data": notifications_data  
@@ -192,4 +191,10 @@ def view_notifications_page(request: Request):
 @app.get("/login.html", response_class=HTMLResponse)  
 def view_login_page(request: Request):
     # This opens your Login.html file
-    return templates.TemplateResponse(request=request, name="Login.html")
+    return templates.TemplateResponse(
+        request=request,
+        name="Login.html",
+        context={
+            "profile_data": profile_data
+        }
+    )

@@ -98,18 +98,18 @@
     //Put ALL users here or use Python to search in the database?
     const users = [
   {
-    email: 'sarah.j@email.com',
-    password: 'volunteer123',
-    role: 'volunteer',
-    name: 'Sarah Johnson',
+    email: '{{profile_data[1].email}}', 
+    password: '{{profile_data[1].password}}',
+    role: '{{profile_data[1].role}}',
+    name: '{{profile_data[1].full_name}}',
     redirect: 'scheduler.html'
   },
   {
-    email: 'm.degroot@wesharecafe.org',
-    password: 'manager123',
-    role: 'manager',
-    name: 'Marcus de Groot',
-    redirect: 'inventory.html'
+    email: '{{profile_data[2].email}}',
+    password: '{{profile_data[2].password}}',
+    role: '{{profile_data[2].role}}',
+    name: '{{profile_data[2].full_name}}',
+    redirect: 'scheduler.html'
   }
 ];
 
