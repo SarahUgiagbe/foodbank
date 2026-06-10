@@ -51,18 +51,24 @@ def get_db():
 
 #ALL BELOW CODE TO BE EDITED WHEN DATABASE IS READY! 
 
-#Fake databases for testing
-fake_profile_database = {
+#Insert database stuff here
+profile_data = {
     1: {
+        "user_id": 1,
         "full_name": "Sam",
         "email": "Sam@email.com",
+        "password": "password",
         "phone_number": "+31 6 12345678",
-        "age": 21,
         "role": "Volunteer",
-        "is_manager": False
+        "is_manager": False,
+        "age": 21,
     }
 }
-fake_Notifications_database = {
+
+
+#Search database for messages related to user ID Make function
+#Get Oche to add "Message Type"
+notifications_data = {
     1: {
         "message_type": "Shift Reminder",
         "message": "This is the message of the notification",
@@ -78,6 +84,26 @@ fake_Notifications_database = {
         "message": "This is the message of the notification",
         "time": "2 hours ago",
     },
+    4: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    5: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    6: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    7: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
 }
 # ==============================================================================
 # 4. THE PROFILE WEB PAGE (Pulls from our fake database)
@@ -89,7 +115,7 @@ def view_profile_page(request: Request):
     current_logged_in_id = 1
     
     # 2. Grab the fake user data out of our python dictionary above
-    single_user = fake_profile_database.get(current_logged_in_id)
+    single_user = profile_data.get(current_logged_in_id)
     
     # 3. Open 'Profile.html' and send that fake user data to the screen
     return templates.TemplateResponse(
@@ -119,7 +145,7 @@ def view_notifications_page(request: Request):
     current_logged_in_id = 1
     
     # 3. FIXED: Grab user details from the PROFILE database, not the notifications database!
-    single_user = fake_profile_database.get(current_logged_in_id)
+    single_user = profile_data.get(current_logged_in_id)
     
     # 4. Open 'Notifications.html' and pass both variables to the screen safely
     return templates.TemplateResponse(
@@ -127,6 +153,6 @@ def view_notifications_page(request: Request):
         name="Notifications.html",  
         context={
             "user": single_user, 
-            "notifications": fake_Notifications_database  # Passes all 3 messages smoothly
+            "notifications": notifications_data  # Passes all 3 messages smoothly
         }
     )
