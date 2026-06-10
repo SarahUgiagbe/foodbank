@@ -12,6 +12,10 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean  # SQLALC
 from sqlalchemy.ext.declarative import declarative_base  # SQLALCHEMY: Table tracker
 from sqlalchemy.orm import sessionmaker, Session  # SQLALCHEMY: Database pipeline tools
 
+from sqlalchemy import text
+from sqlalchemy.engine import URL
+
+
 # ==============================================================================
 # 2. STARTING THE APP ENGINE & STYLE SHARING
 # ==============================================================================
@@ -28,10 +32,29 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 # 3. THE DATABASE CONNECTION (Setting up the pipe to PostgreSQL)
 # ==============================================================================
 # THE KEY: Change "password" to match your actual local PostgreSQL password!
-DATABASE_URL = "postgresql://postgres:password@localhost:5432/foodbank_db"
 
-# Create the engine manager that talks to the database
+DATABASE_URL = URL.create(
+    "postgresql+psycopg2",
+    username="ocheabah",
+    password="Yolor787@",  # plain (unescaped) text
+    host="oche-server.postgres.database.azure.com",
+    port=5432,
+    database="foodbank",
+)
+
+# Create the engine manager that talks to the database}
 engine = create_engine(DATABASE_URL)
+
+try:
+    # 1. Connect to the database and execute a dummy query
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+    print("✅ SUCCESS: Successfully connected to the Azure PostgreSQL database!")
+
+except Exception as e:
+    print("❌ CONNECTION FAILED! See the error details below:")
+    print(e)
+
 
 # Setup our temporary database workspace creator
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -198,3 +221,10 @@ def view_login_page(request: Request):
             "profile_data": profile_data
         }
     )
+
+
+#To view pages and insert data
+@app.get("/inventory.html", response_class=HTMLResponse)  
+def view_inventory_page(request: Request):
+    # This opens your Inventory.html file
+    return templates.TemplateResponse(request=request, name="Inventory.html")
