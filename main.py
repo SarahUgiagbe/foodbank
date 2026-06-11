@@ -1,7 +1,5 @@
 #NEED TO FIND WAY FOR BROWSER TO KEEP USER IDENTITY SO ALL INFO IS UNIQUES. CHANGE IN @app.gets
-#  ==============================================================================
-# 1. THE TOOLS (Loading the packages we need)
-# ==============================================================================
+
 import os  # PYTHON: Lets Python talk to your computer's operating system
 
 from fastapi import FastAPI, Request, Depends  # FASTAPI: Web server and routing tools
@@ -12,28 +10,18 @@ from fastapi.staticfiles import StaticFiles  # FASTAPI: Tool to automatically sh
 from sqlalchemy import create_engine, Column, Integer, String, Boolean  # SQLALCHEMY: Database tools
 from sqlalchemy.ext.declarative import declarative_base  # SQLALCHEMY: Table tracker
 from sqlalchemy.orm import sessionmaker, Session  # SQLALCHEMY: Database pipeline tools
-
 from sqlalchemy import text
 from sqlalchemy.engine import URL
 
-
-# ==============================================================================
 # 2. STARTING THE APP ENGINE & STYLE SHARING
-# ==============================================================================
-app = FastAPI()  # Turn on the FastAPI engine (ONLY ONCE!)
+app = FastAPI()  # Turn on the FastAPI engine
 
-# Tell FastAPI to look inside your CURRENT folder (.) for your Profile.html file
+# Tell FastAPI to look inside your CURRENT folder 
 templates = Jinja2Templates(directory=".")
-
-# Tell FastAPI: "If the browser asks for Profile.css from this folder, just hand it over!"
 app.mount("/static", StaticFiles(directory="."), name="static")
-
 
 # ==============================================================================
 # 3. THE DATABASE CONNECTION (Setting up the pipe to PostgreSQL)
-# ==============================================================================
-# THE KEY: Change "password" to match your actual local PostgreSQL password!
-
 DATABASE_URL = URL.create(
     "postgresql+psycopg2",
     username="ocheabah",
@@ -43,7 +31,9 @@ DATABASE_URL = URL.create(
     database="foodbank",
 )
 
-# Create the engine manager that talks to the database}
+#---------------------------------------------------------------------------
+# TESTING CODE BLOCK
+# Create the engine manager that talks to the database
 engine = create_engine(DATABASE_URL)
 
 try:
@@ -56,9 +46,10 @@ except Exception as e:
     print("❌ CONNECTION FAILED! See the error details below:")
     print(e)
 
-
-# Setup our temporary database workspace creator
+# Setup temporary database workspace creator
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+#-----------------------------------------------------------------------------
+
 
 # Base template for our blueprint class
 Base = declarative_base()
@@ -75,7 +66,6 @@ class UserProfile(Base):
     is_manager = Column(Boolean)
     age = Column(Integer)
 
-
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
     db = SessionLocal()  # Open the connection workspace
@@ -83,11 +73,6 @@ def get_db():
         yield db  # Hand it to the page function below
     finally:
         db.close()  # Close it up when the page finishes loading to save memory
-
-
-
-
-
 
 
 #Search database for messages related to user ID Make function
@@ -129,8 +114,10 @@ notifications_data = {
         "time": "2 hours ago",
     },
 }
+
+#Code per Page
 @app.get("/profile.html", response_class=HTMLResponse)  
-def view_profile_page(request: Request, db: Session = Depends(get_db)): # 1. Added ', db: Session = Depends(get_db)'
+def view_profile_page(request: Request, db: Session = Depends(get_db)): 
     
     current_logged_in_id = 1
     
@@ -179,7 +166,6 @@ def view_notifications_page(request: Request):
     # 2. Pretend User ID #1 is the one who logged in
     current_logged_in_id = 1
     
-    
     # 4. Open 'Notifications.html' and pass both variables to the screen safely
     return templates.TemplateResponse(
         request=request,
@@ -189,8 +175,6 @@ def view_notifications_page(request: Request):
         }
     )
 
-#Login Page
-# Login Page
 # Login Page
 @app.get("/login.html", response_class=HTMLResponse)  
 def view_login_page(request: Request, db: Session = Depends(get_db)):
@@ -219,7 +203,6 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
             "profile_data": profile_data
         }
     )
-
 
 #To view pages and insert data
 @app.get("/inventory.html", response_class=HTMLResponse)  
