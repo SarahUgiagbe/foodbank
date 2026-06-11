@@ -84,3 +84,35 @@ profile_data = {
         "age": 21,
     }
 }
+
+
+
+
+@app.get("/login.html", response_class=HTMLResponse)  
+def view_login_page(request: Request, db: Session = Depends(get_db)):
+    
+    # 1. Fetch ALL user rows from your Azure database table
+    db_users = db.query(UserProfile).all()
+
+    # 2. Loop through all database users to build the full profile_data dictionary
+    #Puts all profiles in profile page
+    profile_data = {}
+    for user in db_users:
+        profile_data[user.user_id] = {
+            "user_id": user.user_id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "password": user.password_hash, 
+            "phone_number": user.phone_number,
+            "role": user.role,
+            "is_manager": user.is_manager,
+            "age": user.age
+        }
+    # 3. Pass the complete dictionary containing everyone over to Login.html
+    return templates.TemplateResponse(
+        request=request,
+        name="Login.html",
+        context={
+            "profile_data": profile_data
+        }
+    )

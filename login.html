@@ -176,6 +176,13 @@ function handleLogin(e) {
   } else {
     sessionStorage.setItem('wsc_user', JSON.stringify(loginData));
   }
+
+  // Send the matched user's ID number straight to Python
+  fetch('/set-active-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: parseInt(user.user_id) })
+  });
   
   showToast(`Welcome back, ${user.name}! Redirecting...`);
   

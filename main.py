@@ -1,4 +1,5 @@
-#NEED TO FIND WAY FOR BROWSER TO KEEP USER IDENTITY SO ALL INFO IS UNIQUES. CHANGE IN @app.gets
+#Successfully created unique logins!!!!!!!
+#Bug in navigation bar for inventory page
 
 import os  # PYTHON: Lets Python talk to your computer's operating system
 
@@ -12,6 +13,8 @@ from sqlalchemy.ext.declarative import declarative_base  # SQLALCHEMY: Table tra
 from sqlalchemy.orm import sessionmaker, Session  # SQLALCHEMY: Database pipeline tools
 from sqlalchemy import text
 from sqlalchemy.engine import URL
+from pydantic import BaseModel
+
 
 # 2. STARTING THE APP ENGINE & STYLE SHARING
 app = FastAPI()  # Turn on the FastAPI engine
@@ -50,9 +53,25 @@ except Exception as e:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 #-----------------------------------------------------------------------------
 
-
 # Base template for our blueprint class
 Base = declarative_base()
+
+
+
+
+# The variable where the number will live
+current_logged_in_id = None
+
+class LoginPayload(BaseModel):
+    user_id: int
+
+@app.post("/set-active-user")
+def set_active_user(payload: LoginPayload):
+    global current_logged_in_id
+    current_logged_in_id = payload.user_id  # Stores the number here
+    print(f"Python received the user ID number: {current_logged_in_id}")
+    return {"status": "received"}
+
 
 class UserProfile(Base):
     __tablename__ = "users"  # Tells Python to search your "users" table
@@ -119,12 +138,16 @@ notifications_data = {
 @app.get("/profile.html", response_class=HTMLResponse)  
 def view_profile_page(request: Request, db: Session = Depends(get_db)): 
     
-    current_logged_in_id = 1
+    # CHANGE THIS: Tell the function to look at the global variable at the top of your file
+    global current_logged_in_id
+        
+    # If nobody has logged in yet, default to user 1 so the page doesn't crash
+    if current_logged_in_id is None:
+        current_logged_in_id = 1
     
-    # 2. MOVED QUERY INSIDE: Fetches User 1 right when the page loads
+    # This now dynamically queries whoever logged in!
     user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
 
-    # 3. MOVED DICTIONARY BUILDER INSIDE
     profile_data = {}
     if user:  
         profile_data[current_logged_in_id] = {
@@ -145,7 +168,6 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
         name="Profile.html",  
         context={"user": single_user}  
     )
-
 
 #To view pages and insert data
 @app.get("/scheduler.html", response_class=HTMLResponse)  
@@ -183,6 +205,7 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
     db_users = db.query(UserProfile).all()
 
     # 2. Loop through all database users to build the full profile_data dictionary
+    #Puts all profiles in profile page
     profile_data = {}
     for user in db_users:
         profile_data[user.user_id] = {
@@ -210,7 +233,9 @@ def view_inventory_page(request: Request):
     # This opens your Inventory.html file
     return templates.TemplateResponse(request=request, name="Inventory.html")
 
+#john@example.com
 #hashedpassword1
+
 #hashedpassword2
 #hashedpassword3
 #hashedpassword4
