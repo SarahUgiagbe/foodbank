@@ -13,32 +13,36 @@
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="scheduler.html">We Share & Care Food Bank</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="scheduler.html">Schedule</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="notifications.html">Notifications</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="contact.html">Contact</a>
-                    </li>
-                    <li class="nav-item ms-3">
-                        <a class="nav-link" href="profile.html" title="Profile">
-                            <i class="bi bi-person-circle fs-4"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+ <!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="scheduler.html">We Share & Care Food Bank</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="scheduler.html">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="notifications.html">Notifications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="inventory.html">Inventory</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="contact.html">Contact</a>
+                </li>
+                <li class="nav-item ms-3">
+                    <a class="nav-link" href="profile.html" title="Profile">
+                        <i class="bi bi-person-circle fs-4"></i>
+                    </a>
+                </li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- HERO -->
     <div class="hero-section text-center">
@@ -154,8 +158,273 @@
         </div>
     </div>
 
+    <input type="hidden" id="dbActiveUserId" value="{{ active_user_id | default(1) }}">
+    <input type="hidden" id="dbUserShifts" value='{{ user_shifts | tojson | safe if user_shifts else "[]" }}'>
+    <input type="hidden" id="dbTeamCapacities" value='{{ team_capacities | tojson | safe if team_capacities else "{}" }}'>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/shared.js"></script>
     <script src="/static/scheduler.js"></script>
+</body>
+</html>
+<script>
+/* ============================================
+   SCHEDULER DATABASE-CONNECTED ENGINE
+   ============================================ */
+
+let currentDate   = new Date();
+let currentMonth  = currentDate.getMonth();
+let currentYear   = currentDate.getFullYear();
+
+// Read data safely from the hidden HTML input bridges
+const activeUserId = parseInt(document.getElementById('dbActiveUserId').value) || 1;
+
+// Parse the array strings back into standard JS Arrays and Objects
+const rawShiftsArray = JSON.parse(document.getElementById('dbUserShifts').value);
+const rawCapacitiesObj = JSON.parse(document.getElementById('dbTeamCapacities').value);
+
+// Initialize your tracking engines cleanly!
+let selectedDays       = new Set();
+let assignedDays       = new Set(rawShiftsArray);
+let databaseCapacities = rawCapacitiesObj;
+
+// Daily capacity limits (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5)
+const DAY_CAPACITY = {
+    1: { max: 6 },  // Monday
+    2: { max: 8 },  // Tuesday
+    3: { max: 4 },  // Wednesday
+    4: { max: 8 },  // Thursday
+    5: { max: 5 }   // Friday
+};
+
+let fullDays = new Set();
+const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+];
+const WEEKEND_DAYS = [0, 6];
+
+// ... (Rest of your renderCalendar and toggleDay functions stay exactly as they were)
+
+document.addEventListener('DOMContentLoaded', function () {
+    updateAssignedDaysInfo();
+    renderCalendar();
+    updateAvailabilityDisplay();
+});
+
+function updateAssignedDaysInfo() {
+    const assignedCount = assignedDays.size;
+    const daysWantedInput = document.getElementById('daysWanted');
+    const assignedInfo = document.getElementById('assignedDaysInfo');
+    const assignedCountDisplay = document.getElementById('assignedCountDisplay');
+    const minPreferenceDisplay = document.getElementById('minPreferenceDisplay');
+
+    if (assignedCount > 0) {
+        assignedInfo.classList.remove('d-none');
+        assignedCountDisplay.textContent = assignedCount;
+        minPreferenceDisplay.textContent = assignedCount;
+        
+        const currentValue = parseInt(daysWantedInput.value) || 0;
+        if (currentValue < assignedCount) {
+            daysWantedInput.value = assignedCount;
+        }
+        daysWantedInput.min = assignedCount;
+    } else {
+        assignedInfo.classList.add('d-none');
+        daysWantedInput.min = 1;
+    }
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const headers = Array.from(grid.children).slice(0, 7);
+    grid.innerHTML = '';
+    headers.forEach(h => grid.appendChild(h));
+
+    const firstDay        = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth     = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+    document.getElementById('calendarMonthYear').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+    if (firstDay > 0) {
+        for (let i = firstDay - 1; i >= 0; i--) {
+            grid.appendChild(createDayElement(daysInPrevMonth - i, true, false));
+        }
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateObj   = new Date(currentYear, currentMonth, i);
+        const dayOfWeek = dateObj.getDay();
+        const isWeekend = WEEKEND_DAYS.includes(dayOfWeek);
+        const isPast    = dateObj < today;
+        const dateStr   = formatDate(currentYear, currentMonth, i);
+        const day       = createDayElement(i, false, isWeekend, dateStr, dayOfWeek);
+
+        if (!isWeekend) {
+            if (isPast) {
+                day.classList.add('past');
+            } else if (assignedDays.has(dateStr)) {
+                day.classList.add('assigned');
+            } else {
+                const cap = getDayCapacity(dateStr, dayOfWeek);
+                if (cap.current >= cap.max) {
+                    day.classList.add('full');
+                    day.title = "This day is full - no spots available";
+                }
+
+                if (selectedDays.has(dateStr)) day.classList.add('selected');
+                if (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                    day.classList.add('today');
+                }
+                day.addEventListener('click', () => toggleDay(dateStr, day));
+            }
+        }
+        grid.appendChild(day);
+    }
+
+    const totalCells = grid.children.length - 7;
+    const remaining  = 42 - totalCells;
+    for (let i = 1; i <= remaining; i++) {
+        grid.appendChild(createDayElement(i, true, false));
+    }
+}
+
+function createDayElement(dayNum, isOtherMonth, isWeekend, dateStr, dayOfWeek) {
+    const div = document.createElement('div');
+    div.className = 'calendar-day';
+    if (isOtherMonth) div.classList.add('other-month');
+    if (isWeekend) {
+        div.classList.add('weekend');
+        div.innerHTML = `<span class="closed-label">Closed</span>`;
+    } else {
+        const dayNumSpan = document.createElement('span');
+        dayNumSpan.className = 'day-number';
+        dayNumSpan.textContent = dayNum;
+        div.appendChild(dayNumSpan);
+
+        if (!isOtherMonth && dateStr && dayOfWeek !== undefined) {
+            const capacity = getDayCapacity(dateStr, dayOfWeek);
+            const capSpan = document.createElement('span');
+            capSpan.className = 'day-capacity';
+            capSpan.textContent = `${capacity.current}/${capacity.max}`;
+            div.appendChild(capSpan);
+        }
+    }
+    return div;
+}
+
+function getDayCapacity(dateStr, dayOfWeek) {
+    let baseCount = databaseCapacities[dateStr] || 0;
+    
+    // Add local choice selections real-time adjustments before hitting submit
+    if (selectedDays.has(dateStr) && !assignedDays.has(dateStr)) {
+        baseCount++;
+    }
+    
+    return {
+        current: baseCount,
+        max: DAY_CAPACITY[dayOfWeek] ? DAY_CAPACITY[dayOfWeek].max : 5
+    };
+}
+
+function formatDate(year, month, day) {
+    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function toggleDay(dateStr, element) {
+    const dateObj = new Date(dateStr);
+    const dayOfWeek = dateObj.getDay();
+    const capacity = getDayCapacity(dateStr, dayOfWeek);
+    
+    if (!selectedDays.has(dateStr) && capacity.current >= capacity.max) {
+        showToast('This day has hit maximum staffing capacity capacity.');
+        return;
+    }
+
+    if (selectedDays.has(dateStr)) {
+        selectedDays.delete(dateStr);
+    } else {
+        selectedDays.add(dateStr);
+    }
+    
+    updateAvailabilityDisplay();
+    validateSelection();
+    renderCalendar();
+}
+
+function updateAvailabilityDisplay() {
+    document.getElementById('selectedCount').textContent = selectedDays.size;
+    updateSubmitButton();
+}
+
+function validateSelection() {
+    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    const validationAlert = document.getElementById('validationAlert');
+    const validationMessage = document.getElementById('validationMessage');
+
+    // Combine what is already in database + what they clicked right now
+    const totalSelectedCount = selectedDays.size + assignedDays.size;
+
+    if (totalSelectedCount < daysWanted) {
+        validationAlert.classList.remove('d-none');
+        validationMessage.textContent = `You must match your preference of ${daysWanted} days total. (Currently: ${totalSelectedCount})`;
+        return false;
+    } else {
+        validationAlert.classList.add('d-none');
+        return true;
+    }
+}
+
+function updateSubmitButton() {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = selectedDays.size === 0;
+}
+
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    renderCalendar();
+}
+
+// REWRITE: LIVE FETCH PUSH ACTION CONNECTING TO FASTAPI SQL ENDPOINT
+function submitSchedule() {
+    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    
+    // Package up combined items list payload array
+    const compiledList = Array.from(selectedDays);
+
+    fetch('/submit-schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            user_id: activeUserId,
+            days_wanted: daysWanted,
+            available_days: compiledList
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showToast('Your updated shift availability is locked into Azure Database!');
+            
+            // Move newly created items into tracking arrays seamlessly without full reload
+            compiledList.forEach(day => assignedDays.add(day));
+            selectedDays.clear();
+            
+            updateAssignedDaysInfo();
+            renderCalendar();
+            updateAvailabilityDisplay();
+        } else {
+            alert('Database write failure: ' + data.message);
+        }
+    })
+    .catch(err => console.error('Transmission fault error:', err));
+}
+</script>
 </body>
 </html>

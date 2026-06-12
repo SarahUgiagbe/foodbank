@@ -7,41 +7,41 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="shared.css">
-    <link rel="stylesheet" href="inventory.css">
+    <link rel="stylesheet" href="/static/shared.css">
+    <link rel="stylesheet" href="/static/inventory.css">
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="scheduler.html">We Share & Care Food Bank</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="scheduler.html">Schedule</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="notifications.html">Notifications</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="contact.html">Contact</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="inventory.html">Inventory</a>
-                    </li>
-                    <li class="nav-item ms-3">
-                        <a class="nav-link" href="profile.html" title="Profile">
-                            <i class="bi bi-person-circle fs-4"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+  <!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="scheduler.html">We Share & Care Food Bank</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="scheduler.html">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="notifications.html">Notifications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="inventory.html">Inventory</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="contact.html">Contact</a>
+                </li>
+                <li class="nav-item ms-3">
+                    <a class="nav-link" href="profile.html" title="Profile">
+                        <i class="bi bi-person-circle fs-4"></i>
+                    </a>
+                </li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- HERO -->
     <div class="hero-section text-center">
@@ -68,26 +68,12 @@
                         <input type="text" class="form-control form-control-lg" id="formProductName" placeholder="e.g. Bananas, Milk, Rice..." required>
                     </div>
 
-                    <!-- Row 2: Quantity + Unit (grouped together) -->
+                    <!-- Row 2: Quantity + Category (grouped together) -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="formQuantity" placeholder="Enter amount" min="0.01" step="0.01" required>
+                            <input type="number" class="form-control" id="formQuantity" placeholder="Enter amount" min="1" step="1" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Unit</label>
-                            <select class="form-select" id="formUnit" required>
-                                <option value="" disabled selected>Select unit</option>
-                                <option value="kg">kg</option>
-                                <option value="g">g</option>
-                                <option value="L">L</option>
-                                <option value="ml">ml</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Row 3: Category + Expiry Date (grouped together) -->
-                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Category</label>
                             <select class="form-select" id="formCategory" required>
@@ -100,12 +86,14 @@
                                 <option value="frozen">Frozen</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Expiry Date</label>
-                            <div class="position-relative">
-                                <input type="date" class="form-control" id="formExpiryDate" required>
-                                <i class="bi bi-calendar3 position-absolute top-50 end-0 translate-middle-y me-3 text-muted calendar-icon"></i>
-                            </div>
+                    </div>
+
+                    <!-- Row 3: Expiry Date (full width) -->
+                    <div class="mb-4">
+                        <label class="form-label">Expiry Date</label>
+                        <div class="position-relative">
+                            <input type="date" class="form-control" id="formExpiryDate" required>
+                            <i class="bi bi-calendar3 position-absolute top-50 end-0 translate-middle-y me-3 text-muted calendar-icon"></i>
                         </div>
                     </div>
 
@@ -219,8 +207,315 @@
         </div>
     </div>
 
+    <input type="hidden" id="dbInventoryData" value='{{ inventory_data | tojson | safe if inventory_data else "[]" }}'>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="shared.js"></script>
-    <script src="inventory.js"></script>
+    <script src="/static/shared.js"></script>
+    <script src="/static/inventory.js"></script>s
 </body>
 </html>
+<script>
+/* ============================================
+   INVENTORY DATABASE-CONNECTED ENGINE
+   ============================================ */
+
+// Read the database dictionary passed from Python Jinja context engine parsing
+let inventory = JSON.parse(document.getElementById('dbInventoryData').value);
+
+let sortField = null;
+let sortDirection = 'asc';
+let productFilter = '';
+let categoryFilter = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('formExpiryDate').min = today;
+  
+  renderInventoryTable();
+  updateActiveFilters();
+  
+  document.getElementById('addDonationForm').addEventListener('submit', handleAddDonation);
+  document.getElementById('filterProduct').addEventListener('input', function(e) {
+    productFilter = e.target.value;
+    renderInventoryTable();
+    updateActiveFilters();
+  });
+  document.getElementById('filterCategory').addEventListener('change', function(e) {
+    categoryFilter = e.target.value;
+    renderInventoryTable();
+    updateActiveFilters();
+  });
+});
+
+// Category mapper updating standard terminology strings into your custom layout badges
+function getCategoryBadgeClass(category) {
+  const classes = {
+    fresh: 'badge-fresh',
+    refrigerated: 'badge-refrigerated',
+    drink: 'badge-drink',
+    canned: 'badge-canned',
+    grain: 'badge-dry',  // Map 'grain' database items safely to dry styles
+    bakery: 'badge-fresh', // Map 'bakery' database items safely to fresh styles
+    dairy: 'badge-refrigerated', // Map 'dairy' database items safely to refrigerated styles
+    dry: 'badge-dry',
+    frozen: 'badge-frozen'
+  };
+  return classes[category] || 'badge-fresh';
+}
+
+function getStatusBadge(daysLeft) {
+  if (daysLeft <= 2) {
+    return `<span class="badge-status status-critical"><i class="bi bi-exclamation-triangle-fill"></i> ${daysLeft}d left</span>`;
+  } else if (daysLeft <= 6) {
+    return `<span class="badge-status status-warning"><i class="bi bi-clock-fill"></i> ${daysLeft}d left</span>`;
+  } else {
+    return `<span class="badge-status status-good"><i class="bi bi-check-circle-fill"></i> ${daysLeft}d left</span>`;
+  }
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function handleSort(field) {
+  if (sortField === field) {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField = field;
+    sortDirection = 'asc';
+  }
+  
+  document.querySelectorAll('.sort-icon').forEach(icon => {
+    icon.className = 'bi bi-chevron-expand sort-icon';
+  });
+  const activeIcon = document.getElementById(`sort-${field}`);
+  if (activeIcon) {
+    activeIcon.className = `bi bi-chevron-${sortDirection === 'asc' ? 'up' : 'down'} sort-icon`;
+  }
+  
+  renderInventoryTable();
+}
+
+function getFilteredInventory() {
+  return inventory.filter(item => {
+    const matchesProduct = productFilter === '' || item.productName.toLowerCase().includes(productFilter.toLowerCase());
+    const matchesCategory = categoryFilter === '' || item.category === categoryFilter;
+    return matchesProduct && matchesCategory;
+  });
+}
+
+function getSortedInventory(filtered) {
+  if (!sortField) return filtered;
+  
+  return [...filtered].sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return aValue.localeCompare(bValue) * direction;
+    }
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return (aValue - bValue) * direction;
+    }
+    return 0;
+  });
+}
+
+function renderInventoryTable() {
+  const tbody = document.getElementById('inventoryTableBody');
+  const emptyState = document.getElementById('emptyState');
+  
+  const filtered = getFilteredInventory();
+  const sorted = getSortedInventory(filtered);
+  
+  if (sorted.length === 0) {
+    tbody.innerHTML = '';
+    emptyState.classList.remove('d-none');
+    return;
+  }
+  
+  emptyState.classList.add('d-none');
+  
+  tbody.innerHTML = sorted.map(item => `
+    <tr>
+      <td>${item.productName}</td>
+      <td><span class="badge-category ${getCategoryBadgeClass(item.category)} text-capitalize">${item.category}</span></td>
+      <td>${formatDate(item.expiryDate)}</td>
+      <td>${getStatusBadge(item.daysLeft)}</td>
+      <td>
+        <div class="quantity-control">
+          <button class="btn-quantity btn-decrement" onclick="decrementQuantity(${item.id})">
+            <i class="bi bi-dash"></i>
+          </button>
+          <input type="number" class="quantity-input" value="${item.quantity}" 
+                 onchange="updateQuantity(${item.id}, this.value)" min="0" step="1">
+          <button class="btn-quantity btn-increment" onclick="incrementQuantity(${item.id})">
+            <i class="bi bi-plus"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateActiveFilters() {
+  const container = document.getElementById('activeFilters');
+  
+  if (!productFilter && !categoryFilter) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  let html = '<span class="me-2 text-muted small">Active filters:</span>';
+  
+  if (categoryFilter) {
+    html += `
+      <span class="filter-badge me-2">
+        Category: ${categoryFilter}
+        <button onclick="clearCategoryFilter()"><i class="bi bi-x"></i></button>
+      </span>
+    `;
+  }
+  
+  if (productFilter) {
+    html += `
+      <span class="filter-badge me-2">
+        Product: ${productFilter}
+        <button onclick="clearProductFilter()"><i class="bi bi-x"></i></button>
+      </span>
+    `;
+  }
+  
+  html += `<button class="btn-clear-filters" onclick="clearAllFilters()">Clear all</button>`;
+  container.innerHTML = html;
+}
+
+function clearCategoryFilter() {
+  categoryFilter = '';
+  document.getElementById('filterCategory').value = '';
+  renderInventoryTable();
+  updateActiveFilters();
+}
+
+function clearProductFilter() {
+  productFilter = '';
+  document.getElementById('filterProduct').value = '';
+  renderInventoryTable();
+  updateActiveFilters();
+}
+
+function clearAllFilters() {
+  productFilter = '';
+  categoryFilter = '';
+  document.getElementById('filterProduct').value = '';
+  document.getElementById('filterCategory').value = '';
+  renderInventoryTable();
+  updateActiveFilters();
+}
+
+function removeItem(id) {
+  const item = inventory.find(i => i.id === id);
+  const itemName = item ? item.productName : 'Item';
+  renderInventoryTable();
+  showToast(`${itemName} marked for deletion (quantity reached 0). Click 'Submit Updates' to apply changes.`);
+}
+
+function incrementQuantity(id) {
+  const item = inventory.find(i => i.id === id);
+  if (item) {
+    item.quantity++;
+    renderInventoryTable();
+  }
+}
+
+function decrementQuantity(id) {
+  const item = inventory.find(i => i.id === id);
+  if (item) {
+    item.quantity--;
+    if (item.quantity <= 0) {
+      removeItem(id);
+    } else {
+      renderInventoryTable();
+    }
+  }
+}
+
+function updateQuantity(id, value) {
+  const item = inventory.find(i => i.id === id);
+  if (item) {
+    const newQuantity = parseInt(value) || 0;
+    if (newQuantity <= 0) {
+      removeItem(id);
+    } else {
+      item.quantity = newQuantity;
+      renderInventoryTable();
+    }
+  }
+}
+
+// ASYNC FETCH: SUBMIT NEW DONATION STRAIGHT TO POSTGRES
+function handleAddDonation(e) {
+  e.preventDefault();
+  
+  const productName = document.getElementById('formProductName').value.trim();
+  const quantity = parseInt(document.getElementById('formQuantity').value) || 0;
+  const category = document.getElementById('formCategory').value;
+  const expiryDate = document.getElementById('formExpiryDate').value;
+  
+  if (!productName || !quantity || !category || !expiryDate) {
+    showToast('Please fill in all fields.');
+    return;
+  }
+
+  fetch('/api/inventory/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        food_name: productName,
+        food_type: category,
+        quantity: quantity,
+        expiry_date: expiryDate
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+        showToast(`${productName} added to cloud table database!`);
+        // Refresh the interface view seamlessly
+        window.location.reload();
+    } else {
+        alert('Database rejection: ' + data.message);
+    }
+  })
+  .catch(err => console.error('Fault error transmitting:', err));
+}
+
+// ASYNC FETCH: UPDATE REAL-TIME MODIFIED QUANTITY VALUES
+function submitUpdates() {
+  const updatePayload = inventory.map(item => ({
+      id: item.id,
+      quantity: item.quantity
+  }));
+
+  fetch('/api/inventory/update-quantities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: updatePayload })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === 'success') {
+          const message = document.getElementById('updateMessage');
+          message.classList.remove('d-none');
+          setTimeout(() => { message.classList.add('d-none'); }, 3000);
+          showToast('Inventory allocations sync complete.');
+          window.location.reload();
+      } else {
+          alert('Update loop rejected: ' + data.message);
+      }
+  })
+  .catch(err => console.error('Fault error sync:', err));
+}
+</script>

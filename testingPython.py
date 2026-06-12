@@ -40,3 +40,134 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
         name="Profile.html",  
         context={"user": single_user}  # Passing just ONE user item instead of a list
     )
+
+
+#To view pages and insert data
+@app.get("/notifications.html", response_class=HTMLResponse)  
+def view_notifications_page(request: Request):
+    # This opens your Notifications.html file
+    # 1. Pretend User ID #1 is the one who logged in
+    current_logged_in_id = 1
+    
+    # 2. Grab the fake user data out of our python dictionary above
+    single_user = fake_profile_database.get(current_logged_in_id)
+    
+    # 3. Open 'Notifications.html' and send that fake user data to the screen
+    return templates.TemplateResponse( #Using fake database again for testing data
+        request=request,
+        name="Notifications.html",  
+        context={"user": single_user}  # This passes the data to your HTML file
+    )
+    #return templates.TemplateResponse(request=request, name="Notifications.html")
+
+
+#TESTING
+profile_data = {
+    1: {
+        "user_id": 1,
+        "full_name": "Sam",
+        "email": "Sam@email.com",
+        "password": "password",
+        "phone_number": "+31 6 12345678",
+        "role": "Volunteer",
+        "is_manager": False,
+        "age": 21,
+    },
+    2: {
+        "user_id": 2,
+        "full_name": "Bob",
+        "email": "Bob@email.com",
+        "password": "password2",
+        "phone_number": "+31 6 12345678",
+        "role": "Volunteer",
+        "is_manager": True,
+        "age": 21,
+    }
+}
+
+
+
+
+@app.get("/login.html", response_class=HTMLResponse)  
+def view_login_page(request: Request, db: Session = Depends(get_db)):
+    
+    # 1. Fetch ALL user rows from your Azure database table
+    db_users = db.query(UserProfile).all()
+
+    # 2. Loop through all database users to build the full profile_data dictionary
+    #Puts all profiles in profile page
+    profile_data = {}
+    for user in db_users:
+        profile_data[user.user_id] = {
+            "user_id": user.user_id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "password": user.password_hash, 
+            "phone_number": user.phone_number,
+            "role": user.role,
+            "is_manager": user.is_manager,
+            "age": user.age
+        }
+    # 3. Pass the complete dictionary containing everyone over to Login.html
+    return templates.TemplateResponse(
+        request=request,
+        name="Login.html",
+        context={
+            "profile_data": profile_data
+        }
+    )
+
+@app.get("/notifications.html", response_class=HTMLResponse)  # 1. FIXED: Removed .html so it matches your navbar link!
+def view_notifications_page(request: Request):
+    # 2. Pretend User ID #1 is the one who logged in
+    current_logged_in_id = 1
+    
+    # 4. Open 'Notifications.html' and pass both variables to the screen safely
+    return templates.TemplateResponse(
+        request=request,
+        name="Notifications.html",
+        context={
+            "notifications_data": notifications_data  
+        }
+    )
+
+
+notifications_data = {
+    1: {
+        "message_type": "You're Great Reminder",
+        "message": "This is a message",
+        "time": "1 day ago",
+    },
+    2: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    4: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    5: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    6: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+}
+
+
+#To view pages and insert data
+@app.get("/inventory.html", response_class=HTMLResponse)  
+def view_inventory_page(request: Request):
+    # This opens your Inventory.html file
+    return templates.TemplateResponse(request=request, name="Inventory.html")
