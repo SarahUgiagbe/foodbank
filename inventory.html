@@ -207,28 +207,20 @@
         </div>
     </div>
 
+    <input type="hidden" id="dbInventoryData" value='{{ inventory_data | tojson | safe if inventory_data else "[]" }}'>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/shared.js"></script>
     <script src="/static/inventory.js"></script>s
 </body>
 </html>
 <script>
-  /* ============================================
-   INVENTORY PAGE JS
+/* ============================================
+   INVENTORY DATABASE-CONNECTED ENGINE
    ============================================ */
 
-let inventory = [
-  { id: 1, productName: 'Bananas', category: 'fresh', quantity: 30, expiryDate: '2026-06-03', daysLeft: 2 },
-  { id: 2, productName: 'Apples', category: 'fresh', quantity: 50, expiryDate: '2026-06-05', daysLeft: 4 },
-  { id: 3, productName: 'Milk', category: 'refrigerated', quantity: 24, expiryDate: '2026-06-07', daysLeft: 6 },
-  { id: 4, productName: 'Orange Juice', category: 'drink', quantity: 36, expiryDate: '2026-06-10', daysLeft: 9 },
-  { id: 5, productName: 'Canned Beans', category: 'canned', quantity: 400, expiryDate: '2027-03-15', daysLeft: 274 },
-  { id: 6, productName: 'Bananas', category: 'fresh', quantity: 20, expiryDate: '2026-06-08', daysLeft: 7 },
-  { id: 7, productName: 'Apples', category: 'fresh', quantity: 35, expiryDate: '2026-06-12', daysLeft: 11 },
-  { id: 8, productName: 'Milk', category: 'refrigerated', quantity: 500, expiryDate: '2026-06-04', daysLeft: 3 },
-  { id: 9, productName: 'Orange Juice', category: 'drink', quantity: 42, expiryDate: '2026-06-15', daysLeft: 14 },
-  { id: 10, productName: 'Canned Beans', category: 'canned', quantity: 200, expiryDate: '2027-04-20', daysLeft: 305 },
-];
+// Read the database dictionary passed from Python Jinja context engine parsing
+let inventory = JSON.parse(document.getElementById('dbInventoryData').value);
 
 let sortField = null;
 let sortDirection = 'asc';
@@ -255,12 +247,16 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// Category mapper updating standard terminology strings into your custom layout badges
 function getCategoryBadgeClass(category) {
   const classes = {
     fresh: 'badge-fresh',
     refrigerated: 'badge-refrigerated',
     drink: 'badge-drink',
     canned: 'badge-canned',
+    grain: 'badge-dry',  // Map 'grain' database items safely to dry styles
+    bakery: 'badge-fresh', // Map 'bakery' database items safely to fresh styles
+    dairy: 'badge-refrigerated', // Map 'dairy' database items safely to refrigerated styles
     dry: 'badge-dry',
     frozen: 'badge-frozen'
   };
@@ -419,13 +415,11 @@ function clearAllFilters() {
   updateActiveFilters();
 }
 
-// Remove item from inventory by id
 function removeItem(id) {
   const item = inventory.find(i => i.id === id);
   const itemName = item ? item.productName : 'Item';
-  inventory = inventory.filter(i => i.id !== id);
   renderInventoryTable();
-  showToast(`${itemName} removed from inventory (quantity reached 0)`);
+  showToast(`${itemName} marked for deletion (quantity reached 0). Click 'Submit Updates' to apply changes.`);
 }
 
 function incrementQuantity(id) {
@@ -461,6 +455,7 @@ function updateQuantity(id, value) {
   }
 }
 
+// ASYNC FETCH: SUBMIT NEW DONATION STRAIGHT TO POSTGRES
 function handleAddDonation(e) {
   e.preventDefault();
   
@@ -473,37 +468,54 @@ function handleAddDonation(e) {
     showToast('Please fill in all fields.');
     return;
   }
-  
-  const expiry = new Date(expiryDate + 'T00:00:00');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-  
-  const newItem = {
-    id: Date.now(),
-    productName,
-    category,
-    quantity,
-    expiryDate,
-    daysLeft
-  };
-  
-  inventory.push(newItem);
-  document.getElementById('addDonationForm').reset();
-  
-  sortField = 'expiryDate';
-  sortDirection = 'asc';
-  
-  renderInventoryTable();
-  showToast(`${productName} (${quantity}) added to inventory!`);
+
+  fetch('/api/inventory/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        food_name: productName,
+        food_type: category,
+        quantity: quantity,
+        expiry_date: expiryDate
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+        showToast(`${productName} added to cloud table database!`);
+        // Refresh the interface view seamlessly
+        window.location.reload();
+    } else {
+        alert('Database rejection: ' + data.message);
+    }
+  })
+  .catch(err => console.error('Fault error transmitting:', err));
 }
 
+// ASYNC FETCH: UPDATE REAL-TIME MODIFIED QUANTITY VALUES
 function submitUpdates() {
-  const message = document.getElementById('updateMessage');
-  message.classList.remove('d-none');
-  setTimeout(() => {
-    message.classList.add('d-none');
-  }, 3000);
-  showToast('Inventory updates saved successfully!');
+  const updatePayload = inventory.map(item => ({
+      id: item.id,
+      quantity: item.quantity
+  }));
+
+  fetch('/api/inventory/update-quantities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: updatePayload })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === 'success') {
+          const message = document.getElementById('updateMessage');
+          message.classList.remove('d-none');
+          setTimeout(() => { message.classList.add('d-none'); }, 3000);
+          showToast('Inventory allocations sync complete.');
+          window.location.reload();
+      } else {
+          alert('Update loop rejected: ' + data.message);
+      }
+  })
+  .catch(err => console.error('Fault error sync:', err));
 }
 </script>

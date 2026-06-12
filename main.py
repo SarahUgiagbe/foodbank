@@ -103,6 +103,27 @@ class Shift(Base):
     end_time = Column(String)
     status = Column(String)
 
+#Database table blueprint for inventory items
+class InventoryItem(Base):
+    __tablename__ = "inventory"
+
+    inventory_id = Column(Integer, primary_key=True)
+    food_name = Column(String)
+    food_type = Column(String)
+    quantity = Column(Integer)
+    expiry_date = Column(Date)
+
+
+class NewDonationPayload(BaseModel):
+    food_name: str
+    food_type: str
+    quantity: int
+    expiry_date: str
+
+class UpdateQuantitiesPayload(BaseModel):
+    items: list[dict] # Expected format: [{"id": 1, "quantity": 12}, ...]
+
+
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
     db = SessionLocal()  # Open the connection workspace
@@ -213,12 +234,6 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
         }
     )
 
-#To view pages and insert data
-@app.get("/inventory.html", response_class=HTMLResponse)  
-def view_inventory_page(request: Request):
-    # This opens your Inventory.html file
-    return templates.TemplateResponse(request=request, name="Inventory.html")
-
 
 #SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
 #The page successfully shows days people are assigned, but people can assign themselves
@@ -295,7 +310,74 @@ def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get
         db.rollback()
         print(f"Database error details: {e}")
         return {"status": "error", "message": str(e)}
-#SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
+#End SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
+
+#INVENTORY PAGE -------------------------------------------------------------------------------------------------
+@app.get("/inventory.html", response_class=HTMLResponse)  
+def view_inventory_page(request: Request, db: Session = Depends(get_db)):
+    # Retrieve all stock entries from Azure, sorted closest to expiry
+    db_items = db.query(InventoryItem).order_by(InventoryItem.expiry_date.asc()).all()
+
+    today = datetime.now().date()
+    formatted_inventory = []
+
+    for item in db_items:
+        # Calculate remaining lifespan metric real-time
+        days_left = (item.expiry_date - today).days if item.expiry_date else 0
+        
+        formatted_inventory.append({
+            "id": item.inventory_id,
+            "productName": item.food_name,
+            "category": item.food_type.lower(),
+            "quantity": item.quantity,
+            "expiryDate": str(item.expiry_date),
+            "daysLeft": days_left
+        })
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="Inventory.html",
+        context={"inventory_data": formatted_inventory}
+    )
+
+
+# 4. API ENDPOINT TO ADD NEW ITEM
+@app.post("/api/inventory/add")
+def add_new_donation(payload: NewDonationPayload, db: Session = Depends(get_db)):
+    try:
+        parsed_date = datetime.strptime(payload.expiry_date, "%Y-%m-%d").date()
+        new_item = InventoryItem(
+            food_name=payload.food_name,
+            food_type=payload.food_type,
+            quantity=payload.quantity,
+            expiry_date=parsed_date
+        )
+        db.add(new_item)
+        db.commit()
+        return {"status": "success", "message": "Item added successfully."}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+
+# 5. API ENDPOINT TO BULK UPDATE QUANTITIES
+@app.post("/api/inventory/update-quantities")
+def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = Depends(get_db)):
+    try:
+        for update in payload.items:
+            item = db.query(InventoryItem).filter(InventoryItem.inventory_id == update["id"]).first()
+            if item:
+                if update["quantity"] <= 0:
+                    db.delete(item) # Automatically purge exhausted stock lines
+                else:
+                    item.quantity = update["quantity"]
+        db.commit()
+        return {"status": "success", "message": "Inventory records synchronized."}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+    
+#END INVENTORY PAGE -------------------------------------------------------------------------------------------------
 
 
 #john@example.com
