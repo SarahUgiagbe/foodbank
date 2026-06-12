@@ -164,3 +164,10 @@ notifications_data = {
         "time": "2 hours ago",
     },
 }
+
+
+#To view pages and insert data
+@app.get("/inventory.html", response_class=HTMLResponse)  
+def view_inventory_page(request: Request):
+    # This opens your Inventory.html file
+    return templates.TemplateResponse(request=request, name="Inventory.html")

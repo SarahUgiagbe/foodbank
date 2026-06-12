@@ -7,12 +7,13 @@ from fastapi.responses import HTMLResponse  # FASTAPI: Tool to send back HTML we
 from fastapi.templating import Jinja2Templates  # FASTAPI: Bridge to drop text into HTML
 from fastapi.staticfiles import StaticFiles  # FASTAPI: Tool to automatically share CSS styles
 
-from sqlalchemy import create_engine, Column, Integer, String, Boolean  # SQLALCHEMY: Database tools
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Date  # SQLALCHEMY: Database tools
 from sqlalchemy.ext.declarative import declarative_base  # SQLALCHEMY: Table tracker
 from sqlalchemy.orm import sessionmaker, Session  # SQLALCHEMY: Database pipeline tools
 from sqlalchemy import text
 from sqlalchemy.engine import URL
 from sqlalchemy import DateTime
+from datetime import datetime  # <-- Add this standard python import at the top
 
 from pydantic import BaseModel
 
@@ -91,6 +92,17 @@ class Notification(Base):
     content = Column(String)
     created_at = Column(String)
 
+#Database table blueprint for shifts
+class Shift(Base):
+    __tablename__ = "shifts"
+
+    shift_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    shift_date = Column(Date)  # <-- CHANGED FROM String TO Date TO MATCH POSTGRES
+    start_time = Column(String)
+    end_time = Column(String)
+    status = Column(String)
+
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
     db = SessionLocal()  # Open the connection workspace
@@ -133,12 +145,6 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
         name="Profile.html",  
         context={"user": single_user}  
     )
-
-@app.get("/scheduler.html", response_class=HTMLResponse)  
-def view_scheduler_page(request: Request):
-    # This opens your Scheduler.html file when someone clicks the link
-    return templates.TemplateResponse(request=request, name="Scheduler.html")
-
 
 #To view pages and insert data
 @app.get("/contact.html", response_class=HTMLResponse)  
@@ -214,7 +220,82 @@ def view_inventory_page(request: Request):
     return templates.TemplateResponse(request=request, name="Inventory.html")
 
 
+#SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
+#The page successfully shows days people are assigned, but people can assign themselves
+#A bug regarding days assigned as well?
+@app.get("/scheduler.html", response_class=HTMLResponse)  
+def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
 
+    # Fetch ALL shifts across the team to calculate daily capacities
+    all_shifts = db.query(Shift).all()
+
+    # Compile team shifts together to see how full a single day is
+    # Formatted as: {"2026-06-10": 3} (meaning 3 people signed up on June 10th)
+    team_capacity_map = {}
+    
+    # Track exactly which days this specific logged-in individual is working
+    user_assigned_days = []
+
+    for shift in all_shifts:
+        # Standardize date format strings to match frontend (YYYY-MM-DD)
+        date_str = str(shift.shift_date).strip()
+        
+        # Build global count tracking map
+        team_capacity_map[date_str] = team_capacity_map.get(date_str, 0) + 1
+        
+        # Isolate if this specific block row belongs to our logged in user
+        if shift.user_id == active_id:
+            user_assigned_days.append(date_str)
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="Scheduler.html",
+        context={
+            "team_capacities": team_capacity_map,
+            "user_shifts": user_assigned_days,
+            "active_user_id": active_id
+        }
+    )
+
+
+# 3. ADD THE DATA SUBMIT ACTION ENDPOINT
+class ScheduleSubmitPayload(BaseModel):
+    user_id: int
+    days_wanted: int
+    available_days: list[str]  # Array containing ['2026-06-12', '2026-06-15']
+
+@app.post("/submit-schedule")
+def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get_db)):
+    try:
+        # Clear out previous placeholder shifts for this specific user
+        db.query(Shift).filter(
+            Shift.user_id == payload.user_id, 
+            Shift.status != 'approved'
+        ).delete()
+
+        # Insert new rows into the shifts database
+        for day_string in payload.available_days:
+            # Convert incoming text string "YYYY-MM-DD" into a real Python date object
+            parsed_date = datetime.strptime(day_string, "%Y-%m-%d").date()
+
+            new_shift = Shift(
+                user_id=payload.user_id,
+                shift_date=parsed_date,  # <-- Pushing a real date object stops the crash!
+                start_time="09:00",      
+                end_time="17:00",        
+                status="scheduled"       
+            )
+            db.add(new_shift)
+            
+        db.commit()
+        return {"status": "success", "message": "Schedule stored in PostgreSQL cloud storage."}
+    except Exception as e:
+        db.rollback()
+        print(f"Database error details: {e}")
+        return {"status": "error", "message": str(e)}
+#SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
 
 
 #john@example.com
