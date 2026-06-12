@@ -13,6 +13,8 @@ from sqlalchemy.ext.declarative import declarative_base  # SQLALCHEMY: Table tra
 from sqlalchemy.orm import sessionmaker, Session  # SQLALCHEMY: Database pipeline tools
 from sqlalchemy import text
 from sqlalchemy.engine import URL
+from sqlalchemy import DateTime
+
 from pydantic import BaseModel
 
 
@@ -85,6 +87,15 @@ class UserProfile(Base):
     is_manager = Column(Boolean)
     age = Column(Integer)
 
+class Notification(Base):
+    __tablename__ = "messages"  # <-- This fixed the 500 error!
+
+    message_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    content = Column(String)
+    created_at = Column(String)
+
+
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
     db = SessionLocal()  # Open the connection workspace
@@ -96,43 +107,6 @@ def get_db():
 
 #Search database for messages related to user ID Make function
 #Get Oche to add "Message Type"
-notifications_data = {
-    1: {
-        "message_type": "You're Great Reminder",
-        "message": "This is a message",
-        "time": "1 day ago",
-    },
-    2: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-    3: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-    4: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-    5: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-    6: {
-        "message_type": "Shift Reminder",
-        "message": "This is the message of the notification",
-        "time": "2 hours ago",
-    },
-    7: {
-        "message_type": "Shift Reminder",
-        "message": "This is the ",
-        "time": "2 hours ago",
-    },
-}
 
 #Code per Page
 @app.get("/profile.html", response_class=HTMLResponse)  
@@ -183,17 +157,40 @@ def view_contact_page(request: Request):
     return templates.TemplateResponse(request=request, name="Contact.html")
 
 
-@app.get("/notifications.html", response_class=HTMLResponse)  # 1. FIXED: Removed .html so it matches your navbar link!
-def view_notifications_page(request: Request):
-    # 2. Pretend User ID #1 is the one who logged in
-    current_logged_in_id = 1
+@app.get("/notifications.html", response_class=HTMLResponse)  
+def view_notifications_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
     
-    # 4. Open 'Notifications.html' and pass both variables to the screen safely
+    # Fallback to user 1 if no one is explicitly logged in yet
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+        
+    # Query rows from the "messages" table matching this user
+    db_notifications = db.query(Notification).filter(Notification.user_id == active_id).all()
+    
+    # Format for the Jinja frontend template script loop
+    formatted_notifications = {}
+    for n in db_notifications:
+        msg_content = n.content.lower() if n.content else ""
+        
+        # UI Layout styling logic based on message keywords
+        if "urgent" in msg_content or "low on" in msg_content or "alert" in msg_content:
+            msg_type = "alert"
+        elif "shift" in msg_content or "schedule" in msg_content:
+            msg_type = "shift"
+        else:
+            msg_type = "check"
+
+        formatted_notifications[n.message_id] = {
+            "message_type": msg_type.capitalize(),
+            "message": n.content if n.content else "No message details.",
+            "time": n.created_at if n.created_at else "Recent"
+        }
+    
     return templates.TemplateResponse(
         request=request,
         name="Notifications.html",
         context={
-            "notifications_data": notifications_data  
+            "notifications_data": formatted_notifications  
         }
     )
 

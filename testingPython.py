@@ -116,3 +116,51 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
             "profile_data": profile_data
         }
     )
+
+@app.get("/notifications.html", response_class=HTMLResponse)  # 1. FIXED: Removed .html so it matches your navbar link!
+def view_notifications_page(request: Request):
+    # 2. Pretend User ID #1 is the one who logged in
+    current_logged_in_id = 1
+    
+    # 4. Open 'Notifications.html' and pass both variables to the screen safely
+    return templates.TemplateResponse(
+        request=request,
+        name="Notifications.html",
+        context={
+            "notifications_data": notifications_data  
+        }
+    )
+
+
+notifications_data = {
+    1: {
+        "message_type": "You're Great Reminder",
+        "message": "This is a message",
+        "time": "1 day ago",
+    },
+    2: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    3: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    4: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    5: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+    6: {
+        "message_type": "Shift Reminder",
+        "message": "This is the message of the notification",
+        "time": "2 hours ago",
+    },
+}
