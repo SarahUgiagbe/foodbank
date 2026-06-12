@@ -75,7 +75,7 @@
                     <div class="card-header-bronze">
                         <h5 class="mb-0">Shift Requests</h5>
                     </div>
-                    <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                    <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start">
                         <div class="availability-box">
                             <!--<div class="availability-number" id="selectedCount">0</div>-->
                             <small class="text-muted">Volunteer Name</small>
@@ -267,7 +267,13 @@ function loadStaffSchedule() {
         let html = '<h4>Staff Working</h4>';
         html += '<ul class="list-group">';
         staffData.working.forEach(person => {
-        html += `<li class="list-group-item">${person.name} - ${person.role}</li>`;
+            html += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>${person.name} - ${person.role}</span>
+                <button class="btn btn-sm" style="background-color: #8E5572; color: white;">
+                    Remove
+                </button>
+            </li>`;
         });
         html += '</ul>';
         
@@ -397,6 +403,7 @@ function renderCalendar() {
             } else if (fullDays.has(dateStr)) {
                 day.classList.add('full');
                 day.title = "This day is full - no spots available";
+                day.addEventListener('click', () => openModal(dateStr));
             } else {
                 if (selectedDays.has(dateStr)) day.classList.add('selected');
                 if (
@@ -406,7 +413,7 @@ function renderCalendar() {
                 ) day.classList.add('today');
                 /*day.addEventListener('click', () => toggleDay(dateStr, day));*/
                 day.addEventListener('click', () => {
-                    toggleDay(dateStr, day);
+                    /*toggleDay(dateStr, day);*/
                     openModal(dateStr);
                 });
             }
