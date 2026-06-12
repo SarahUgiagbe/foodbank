@@ -1,7 +1,6 @@
-#Successfully created unique logins!!!!!!!
 #Bug in navigation bar for inventory page
 
-import os  # PYTHON: Lets Python talk to your computer's operating system
+import os  
 
 from fastapi import FastAPI, Request, Depends  # FASTAPI: Web server and routing tools
 from fastapi.responses import HTMLResponse  # FASTAPI: Tool to send back HTML web pages
@@ -18,15 +17,15 @@ from sqlalchemy import DateTime
 from pydantic import BaseModel
 
 
-# 2. STARTING THE APP ENGINE & STYLE SHARING
+# STARTING THE APP ENGINE & STYLE SHARING
+#-------------------------------------------------------------------------------------------------------
 app = FastAPI()  # Turn on the FastAPI engine
 
 # Tell FastAPI to look inside your CURRENT folder 
 templates = Jinja2Templates(directory=".")
 app.mount("/static", StaticFiles(directory="."), name="static")
 
-# ==============================================================================
-# 3. THE DATABASE CONNECTION (Setting up the pipe to PostgreSQL)
+# THE DATABASE CONNECTION (Setting up the pipe to PostgreSQL)
 DATABASE_URL = URL.create(
     "postgresql+psycopg2",
     username="ocheabah",
@@ -36,11 +35,9 @@ DATABASE_URL = URL.create(
     database="foodbank",
 )
 
-#---------------------------------------------------------------------------
-# TESTING CODE BLOCK
 # Create the engine manager that talks to the database
 engine = create_engine(DATABASE_URL)
-
+#Testing connection to database
 try:
     # 1. Connect to the database and execute a dummy query
     with engine.connect() as connection:
@@ -53,28 +50,26 @@ except Exception as e:
 
 # Setup temporary database workspace creator
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-#-----------------------------------------------------------------------------
 
 # Base template for our blueprint class
 Base = declarative_base()
+#--------------------------------------------------------------------------------------------------------------
 
-
-
-
-# The variable where the number will live
+# Variable for tracking who's logged in using user_id numbers from the database
 current_logged_in_id = None
 
+#This code saves which user is logged in
 class LoginPayload(BaseModel):
     user_id: int
 
 @app.post("/set-active-user")
 def set_active_user(payload: LoginPayload):
     global current_logged_in_id
-    current_logged_in_id = payload.user_id  # Stores the number here
+    current_logged_in_id = payload.user_id  
     print(f"Python received the user ID number: {current_logged_in_id}")
     return {"status": "received"}
 
-
+#Database table blueprint for user profile
 class UserProfile(Base):
     __tablename__ = "users"  # Tells Python to search your "users" table
 
@@ -87,14 +82,14 @@ class UserProfile(Base):
     is_manager = Column(Boolean)
     age = Column(Integer)
 
+#Database table blueprint for notifications
 class Notification(Base):
-    __tablename__ = "messages"  # <-- This fixed the 500 error!
+    __tablename__ = "messages"  
 
     message_id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
     content = Column(String)
     created_at = Column(String)
-
 
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
@@ -105,21 +100,17 @@ def get_db():
         db.close()  # Close it up when the page finishes loading to save memory
 
 
-#Search database for messages related to user ID Make function
-#Get Oche to add "Message Type"
+# ALL BELOW ARE CODE PER PAGE
 
-#Code per Page
+#Finished
 @app.get("/profile.html", response_class=HTMLResponse)  
 def view_profile_page(request: Request, db: Session = Depends(get_db)): 
     
-    # CHANGE THIS: Tell the function to look at the global variable at the top of your file
     global current_logged_in_id
         
-    # If nobody has logged in yet, default to user 1 so the page doesn't crash
     if current_logged_in_id is None:
         current_logged_in_id = 1
     
-    # This now dynamically queries whoever logged in!
     user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
 
     profile_data = {}
@@ -143,7 +134,6 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
         context={"user": single_user}  
     )
 
-#To view pages and insert data
 @app.get("/scheduler.html", response_class=HTMLResponse)  
 def view_scheduler_page(request: Request):
     # This opens your Scheduler.html file when someone clicks the link
@@ -156,23 +146,19 @@ def view_contact_page(request: Request):
     # This opens your Contact.html file
     return templates.TemplateResponse(request=request, name="Contact.html")
 
-
+#Almost Finished. Need more data in database?
 @app.get("/notifications.html", response_class=HTMLResponse)  
 def view_notifications_page(request: Request, db: Session = Depends(get_db)):
     global current_logged_in_id
     
-    # Fallback to user 1 if no one is explicitly logged in yet
     active_id = current_logged_in_id if current_logged_in_id is not None else 1
         
-    # Query rows from the "messages" table matching this user
     db_notifications = db.query(Notification).filter(Notification.user_id == active_id).all()
     
-    # Format for the Jinja frontend template script loop
     formatted_notifications = {}
     for n in db_notifications:
         msg_content = n.content.lower() if n.content else ""
         
-        # UI Layout styling logic based on message keywords
         if "urgent" in msg_content or "low on" in msg_content or "alert" in msg_content:
             msg_type = "alert"
         elif "shift" in msg_content or "schedule" in msg_content:
@@ -194,15 +180,12 @@ def view_notifications_page(request: Request, db: Session = Depends(get_db)):
         }
     )
 
-# Login Page
+#Finished
 @app.get("/login.html", response_class=HTMLResponse)  
 def view_login_page(request: Request, db: Session = Depends(get_db)):
     
-    # 1. Fetch ALL user rows from your Azure database table
     db_users = db.query(UserProfile).all()
 
-    # 2. Loop through all database users to build the full profile_data dictionary
-    #Puts all profiles in profile page
     profile_data = {}
     for user in db_users:
         profile_data[user.user_id] = {
@@ -230,10 +213,21 @@ def view_inventory_page(request: Request):
     # This opens your Inventory.html file
     return templates.TemplateResponse(request=request, name="Inventory.html")
 
+
+
+
+
 #john@example.com
 #hashedpassword1
 
+#John
 #hashedpassword2
+
+#Mike
 #hashedpassword3
+
+#Emma
 #hashedpassword4
+
+#David
 #hashedpassword5
