@@ -1,4 +1,9 @@
 #Bug in navigation bar for inventory page
+#How many days do you want to work not working as intended
+#Message saying "you are already assigned days is wrong"
+#You are already assigned days needs to ignore previous days
+#Cannot unselect days in scheduler page
+#No difference betwwen assigned days and days they want to work
 
 import os  
 
