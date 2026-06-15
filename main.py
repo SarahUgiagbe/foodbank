@@ -492,4 +492,4 @@ print("test")
 #hashedpassword5
 
 #Sam to do
-#Create add messages part for manager schedulor page
+#Need to test with Oche the messaging works properly and for him to add custom messages for the presentation
