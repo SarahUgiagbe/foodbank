@@ -4,6 +4,12 @@
 #You are already assigned days needs to ignore previous days
 #Cannot unselect days in scheduler page
 #No difference betwwen assigned days and days they want to work
+#Hovering over profile picture in navbar does makes whole page shift down
+#Add a logout button? Just a button that links back to login page
+
+#Manager Schedulor page-----------
+#Click a box keeps it highlighted, even after click out or click another box
+#Accepting or refusing a shift does not update the staff requests
 
 import os  
 
@@ -151,6 +157,9 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
     
     user = db.query(UserProfile).filter(UserProfile.user_id == current_logged_in_id).first()
 
+    # Add lookups for layout-level role verification
+    is_manager = user.is_manager if user else False
+
     profile_data = {}
     if user:  
         profile_data[current_logged_in_id] = {
@@ -169,14 +178,24 @@ def view_profile_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request=request,
         name="Profile.html",  
-        context={"user": single_user}  
+        context={"user": single_user, "is_manager": is_manager}  
     )
 
 #To view pages and insert data
 @app.get("/contact.html", response_class=HTMLResponse)  
-def view_contact_page(request: Request):
+def view_contact_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+    
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
     # This opens your Contact.html file
-    return templates.TemplateResponse(request=request, name="Contact.html")
+    return templates.TemplateResponse(
+        request=request, 
+        name="Contact.html", 
+        context={"is_manager": is_manager}
+    )
 
 #Almost Finished. Need more data in database?
 @app.get("/notifications.html", response_class=HTMLResponse)  
@@ -185,6 +204,9 @@ def view_notifications_page(request: Request, db: Session = Depends(get_db)):
     
     active_id = current_logged_in_id if current_logged_in_id is not None else 1
         
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
     db_notifications = db.query(Notification).filter(Notification.user_id == active_id).all()
     
     formatted_notifications = {}
@@ -208,7 +230,8 @@ def view_notifications_page(request: Request, db: Session = Depends(get_db)):
         request=request,
         name="Notifications.html",
         context={
-            "notifications_data": formatted_notifications  
+            "notifications_data": formatted_notifications,
+            "is_manager": is_manager  
         }
     )
 
@@ -248,6 +271,9 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
     global current_logged_in_id
     active_id = current_logged_in_id if current_logged_in_id is not None else 1
 
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
     # Fetch ALL shifts across the team to calculate daily capacities
     all_shifts = db.query(Shift).all()
 
@@ -275,7 +301,8 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
         context={
             "team_capacities": team_capacity_map,
             "user_shifts": user_assigned_days,
-            "active_user_id": active_id
+            "active_user_id": active_id,
+            "is_manager": is_manager
         }
     )
 
@@ -320,6 +347,12 @@ def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get
 #INVENTORY PAGE -------------------------------------------------------------------------------------------------
 @app.get("/inventory.html", response_class=HTMLResponse)  
 def view_inventory_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+    
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
     # Retrieve all stock entries from Azure, sorted closest to expiry
     db_items = db.query(InventoryItem).order_by(InventoryItem.expiry_date.asc()).all()
 
@@ -342,7 +375,7 @@ def view_inventory_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request=request, 
         name="Inventory.html",
-        context={"inventory_data": formatted_inventory}
+        context={"inventory_data": formatted_inventory, "is_manager": is_manager}
     )
 
 
@@ -385,6 +418,21 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
 #END INVENTORY PAGE -------------------------------------------------------------------------------------------------
 
 
+#START MANAGER SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
+@app.get("/Managerscheduler.html", response_class=HTMLResponse)  
+def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+    
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    
+    # This opens your ManagerScheduler.html file
+    return templates.TemplateResponse(
+        request=request, 
+        name="ManagerScheduler.html", 
+        context={"is_manager": True}
+    )
+
 #john@example.com
 #hashedpassword1
 
@@ -399,3 +447,5 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
 
 #David
 #hashedpassword5
+
+#Change links for all pages 

@@ -12,36 +12,46 @@
 </head>
 <body>
 <!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
-        <a class="navbar-brand" href="scheduler.html">We Share & Care Food Bank</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link" href="scheduler.html">Schedule</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="notifications.html">Notifications</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="inventory.html">Inventory</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="contact.html">Contact</a>
-                </li>
-                <li class="nav-item ms-3">
-                    <a class="nav-link" href="profile.html" title="Profile">
-                        <i class="bi bi-person-circle fs-4"></i>
-                    </a>
-                </li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+                    {% if is_manager %}
+                        <a class="nav-link navbar-brand" href="ManagerScheduler.html">We Share & Care Food Bank</a>
+                    {% else %}
+                        <a class="nav-link navbar-brand" href="scheduler.html">We Share & Care Food Bank</a>
+                    {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        {% if is_manager %}
+                            <a class="nav-link" href="ManagerScheduler.html">Schedule</a>
+                        {% else %}
+                            <a class="nav-link" href="scheduler.html">Schedule</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="notifications.html">Notifications</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="inventory.html">Inventory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Contact</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link" href="profile.html" title="Profile">
+                            <i class="bi bi-person-circle fs-4"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Logout</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
-
+    </nav>
     <!-- HERO -->
     <div class="hero-section text-center">
         <div class="container">
