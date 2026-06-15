@@ -10,7 +10,6 @@
 #Notifications sorted backwards
 
 #Manager Schedulor page-----------
-#Click a box keeps it highlighted, even after click out or click another box
 #Accepting or refusing a shift does not update the staff requests
 
 import os  
