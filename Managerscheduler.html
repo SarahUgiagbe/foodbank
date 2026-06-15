@@ -146,9 +146,9 @@
     </div>
 
     <!-- FOOTER -->
-    <footer class="footer-custom text-center">
+    <footer class="footer-custom text-center" style="background-color: #7a9e7e;"
         <div class="container">
-            <p class="font-serif mb-2" style="color: var(--golden-bronze); font-size: 1.25rem;">We Share & Care Food Bank</p>
+             <p class="font-serif mb-2" style="color: var(--white); font-size: 1.25rem;">We Share & Care Food Bank</p>
             <p class="mb-0" style="color: rgba(240,230,220,0.6); font-size: 0.9rem;">Thank you for your dedication to our community</p>
         </div>
     </footer>
@@ -665,6 +665,7 @@ function openUrgentModal() {
     modal.show();
 }
 
+/*
 function sendUrgentMessage() {
     const plainText = urgentQuill.getText().trim();
 
@@ -686,6 +687,49 @@ function sendUrgentMessage() {
     modal.hide();
 
     showToast('Urgent message sent to all volunteers!');
+}
+    */
+
+function sendUrgentMessage() {
+    const plainText = urgentQuill.getText().trim();
+
+    if (plainText === '') {
+        alert('Please write a message before sending.');
+        return;
+    }
+
+    // Capture the rich-text layout HTML (includes bold, paragraph tags, etc.)
+    const formattedMessage = urgentQuill.root.innerHTML;
+
+    // Fire data payload over to the FastAPI Python environment
+    fetch('/api/urgent-message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message_html: formattedMessage
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Close down modal window programmatically
+            const modalElement = document.getElementById('urgentMessageModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            showToast('Urgent message sent to all volunteers!');
+        } else {
+            alert('Failed to send message: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending broadcast:', error);
+        alert('An error occurred while transmitting your message to the server.');
+    });
 }
 /*----------------------
 Note that formattedMessage now contains the full HTML with bold tags, italic tags etc. — this is what your group-mate will need to save to the database and send to volunteers.
