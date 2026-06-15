@@ -40,7 +40,6 @@
   border: 2px solid var(--rosy-taupe);
   margin-bottom: 1.5rem;
   max-height: 400px;
-  overflow-y: auto; /** This makes a scrollbar appear if there are too many boxes */
 }
 
 .availability-number {

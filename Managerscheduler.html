@@ -67,7 +67,7 @@
     <div class="container pb-5">
         <div class="row g-4">
 
-            <div class="col-lg-4 d-flex flex-column">
+            <div class="col-lg-4 d-flex flex-column gap-3">
                 <!--<div class="card mb-4">
                     <div class="card-header-linen">
                         <h4 class="mb-0">Your Preference</h4>
@@ -85,21 +85,48 @@
                     </div>
                 </div> -->
 
+                <!--! SHIFT REQUESTS-->
                 <div class="card h-100">
                     <div class="card-header-bronze">
                         <h5 class="mb-0">Shift Requests</h5>
                     </div>
+                    <div style="overflow-y: auto; max-height: 300px;"> <!--* SCROLLING FEATURE -->
+                        <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start">
+                            <div class="availability-box">
+                                <!--<div class="availability-number" id="selectedCount">0</div>-->
+                                <small class="text-muted">Amelia</small>
+                                <br>
+                                <small class="text-muted">Availability:<br>22/06/2026<br>23/06/2026<br>24/06/2026<br>Days wanted to work: 2</small>
+                            </div>
+                        </div>
+                        <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start">
+                            <div class="availability-box">
+                                <!--<div class="availability-number" id="selectedCount">0</div>-->
+                                <small class="text-muted">Amelia</small>
+                                <br>
+                                <small class="text-muted">Availability:<br>22/06/2026<br>23/06/2026<br>24/06/2026<br>Days wanted to work: 2</small>
+                            </div>
+                    
+                        </div>
+                    </div>
+                </div>
+
+                <!--! RECENT EDITS FROM MANAGEMENT -->
+                <div class="card h-100">
+                    <div class="card-header-bronze">
+                        <h5 class="mb-0">Recent Changes</h5>
+                    </div>
+                    <div style="overflow-y: auto; max-height: 300px;"> <!--* SCROLLING FEATURE -->
                     <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start">
                         <div class="availability-box">
                             <!--<div class="availability-number" id="selectedCount">0</div>-->
                             <small class="text-muted">Amelia</small>
                             <br>
-                            <small class="text-muted">22/06/2026<br>23/06/2026<br>24/06/2026</small>
+                            <small class="text-muted">22/06/2026 Accepted<br>23/06/2026 Rejected<br>24/06/2026 Accepted</small>
                         </div>
-                    
+                    </div>
                     </div>
                 </div>
-
 
                 <!--<div class="alert alert-custom mt-4 d-flex align-items-center">
                     <i class="bi bi-info-circle-fill me-2"></i>
@@ -133,9 +160,9 @@
             </div>
 
                 <div class="d-grid gap-2">
-                    <!--<button class="btn btn-primary btn-lg" id="submitBtn" onclick="submitSchedule()" disabled>
+                    <button class="btn btn-primary btn-lg" id="submitBtn" onclick="submitSchedule()">
                         Submit Availability
-                    </button>-->
+                    </button>
                     <button class="btn btn-secondary" onclick="openUrgentModal()">
                         Urgent Messaging
                     </button>
@@ -282,9 +309,10 @@ function loadStaffSchedule() {
         html += '<ul class="list-group">';
         staffData.working.forEach(person => {
             html += `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
+            <li class="list-group-item d-flex justify-content-between align-items-center" id="staff-${person.name}">
                 <span>${person.name} - ${person.role}</span>
-                <button class="btn btn-sm" style="background-color: #8E5572; color: white;">
+                <button class="btn btn-sm" style="background-color: #8E5572; color: white;"
+                    onclick="removeStaff('${person.name}')">
                     Remove
                 </button>
             </li>`;
@@ -751,6 +779,12 @@ function rejectRequest(name) {
 
     //Show the alert
     showToast('The shift has been rejected.');
+}
+
+function removeStaff(name) {
+    const listItem = document.getElementById(`staff-${name}`);
+    listItem.remove();
+    showToast('The volunteer has been removed from this shift.');
 }
 
 </script>
