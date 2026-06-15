@@ -72,9 +72,6 @@
                         <h2 class="font-serif mb-1">Your Notifications</h2>
                         <p class="text-muted mb-0">Stay updated with your shift reminders and alerts</p>
                     </div>
-                    <button class="btn btn-mark-read" onclick="markAllRead()">
-                        <i class="bi bi-check-all me-1"></i> Mark all read
-                    </button>
                 </div>
 
                 <div id="notificationsList" class="d-flex flex-column gap-3"></div>
@@ -180,7 +177,6 @@
             notifications.slice(0, MAX_NOTIFICATIONS).forEach(n => {
                 const card = document.createElement('div');
                 card.className = `notification-card p-4 ${n.read ? 'notification-read' : ''}`;
-                card.onclick = () => markAsRead(n.id);
                 card.innerHTML = `
                     <div class="d-flex align-items-start">
                         <div class="flex-shrink-0">${getIcon(n.type)}</div>

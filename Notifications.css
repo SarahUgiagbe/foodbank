@@ -9,7 +9,6 @@
   background: white;
   overflow: hidden;
   transition: all 0.3s ease;
-  cursor: pointer;
 }
 
 .notification-card:hover {
@@ -68,21 +67,6 @@
 .time-text {
   color: var(--rosy-taupe);
   font-size: 0.85rem;
-}
-
-.btn-mark-read {
-  background-color: transparent;
-  border: 2px solid var(--golden-bronze);
-  color: var(--golden-bronze);
-  padding: 8px 20px;
-  border-radius: 50px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-mark-read:hover {
-  background-color: var(--golden-bronze);
-  color: white;
 }
 
 .empty-state {
