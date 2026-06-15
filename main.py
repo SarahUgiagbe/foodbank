@@ -8,7 +8,6 @@
 #Add a logout button? Just a button that links back to login page
 
 #Manager Schedulor page-----------
-#Click a box keeps it highlighted, even after click out or click another box
 #Accepting or refusing a shift does not update the staff requests
 
 import os  
