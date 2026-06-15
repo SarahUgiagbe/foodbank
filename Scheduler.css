@@ -152,10 +152,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   background: var(--linen);
   color: var(--graphite);
@@ -163,36 +163,91 @@
   padding: 4px;
 }
 
-.calendar-day:hover:not(.disabled):not(.selected):not(.weekend):not(.past):not(
-    .assigned
-  ):not(.full) {
+.calendar-day:hover:not(.disabled):not(.selected):not(.weekend):not(.past):not(.assigned):not(.full):not(.scheduled-shift):not(.approved-shift) {
   border-color: var(--golden-bronze);
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
 
-/* Day number */
+/* Day number text defaults */
 .calendar-day .day-number {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 500;
 }
 
-/* Capacity counter on calendar day */
+/* Capacity counter text defaults */
 .calendar-day .day-capacity {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 600;
   opacity: 0.7;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
-/* Selected day */
+/* ── SELECTED DAY STYLE (Active UI Choice) ── */
 .calendar-day.selected {
-  background: var(--golden-bronze);
-  color: white;
-  border-color: var(--golden-bronze);
-  box-shadow: 0 4px 12px rgba(201, 151, 58, 0.4);
+  background: #c9973a !important;
+  color: #ffffff !important;
+  border-color: #c9973a !important;
+  border-radius: 18px !important;
+  box-shadow: 0 6px 16px rgba(201, 151, 58, 0.35) !important;
 }
 
-/* ── ASSIGNED DAY ── */
+.calendar-day.selected .day-number {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.calendar-day.selected .day-capacity {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 600 !important;
+}
+
+/* ── SUBMITTED / DATABASE SHIFT STATES ── */
+
+/* Scheduled Shifts (STAYS GOLD EVEN AFTER SUBMIT / RELOAD) */
+.calendar-grid .calendar-day.scheduled-shift {
+  background: #c9973a !important; /* Matches your image perfectly */
+  color: #ffffff !important;
+  border-color: #c9973a !important;
+  border-radius: 18px !important;
+  box-shadow: 0 6px 16px rgba(201, 151, 58, 0.35) !important;
+}
+
+/* Ensure child text remains white for submitted gold shifts */
+.calendar-grid .calendar-day.scheduled-shift .day-number {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.calendar-grid .calendar-day.scheduled-shift .day-capacity {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 600 !important;
+}
+
+.calendar-grid .calendar-day.scheduled-shift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(201, 151, 58, 0.45) !important;
+}
+
+/* Approved Shifts (Green) - Completely Locked Out */
+.calendar-grid .calendar-day.approved-shift {
+  background-color: #d4edda !important;
+  border: 2px solid #28a745 !important;
+  color: #155724 !important;
+  cursor: not-allowed !important;
+  opacity: 0.95;
+}
+
+.calendar-grid .calendar-day.approved-shift .day-number,
+.calendar-grid .calendar-day.approved-shift .day-capacity {
+  color: #155724 !important;
+}
+
+.calendar-grid .calendar-day.approved-shift:hover {
+  transform: none !important;
+  border-color: #28a745 !important;
+}
+
+/* ── LEGACY STATE BACKUP ── */
 .calendar-day.assigned {
   background: var(--muted-teal);
   color: white;
@@ -208,11 +263,6 @@
   right: 4px;
   font-size: 0.7rem;
   opacity: 0.8;
-}
-
-.calendar-day.assigned:hover {
-  transform: none;
-  border-color: var(--muted-teal);
 }
 
 /* ── FULL DAY (no spots left) ── */
@@ -233,11 +283,6 @@
 .calendar-day.full .day-capacity {
   color: var(--berry-blush);
   font-weight: 700;
-}
-
-.calendar-day.full:hover {
-  transform: none;
-  border-color: var(--berry-blush);
 }
 
 /* Today highlight */

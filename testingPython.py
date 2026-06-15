@@ -424,3 +424,43 @@ def view_manager_scheduler_page(request: Request):
     # This opens your ManagerScheduler.html file
     return templates.TemplateResponse(request=request, name="ManagerScheduler.html")
 
+
+@app.get("/scheduler.html", response_class=HTMLResponse)  
+def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
+    # Fetch ALL shifts across the team to calculate daily capacities
+    all_shifts = db.query(Shift).all()
+
+    # Compile team shifts together to see how full a single day is
+    # Formatted as: {"2026-06-10": 3} (meaning 3 people signed up on June 10th)
+    team_capacity_map = {}
+    
+    # Track exactly which days this specific logged-in individual is working
+    user_assigned_days = []
+
+    for shift in all_shifts:
+        # Standardize date format strings to match frontend (YYYY-MM-DD)
+        date_str = str(shift.shift_date).strip()
+        
+        # Build global count tracking map
+        team_capacity_map[date_str] = team_capacity_map.get(date_str, 0) + 1
+        
+        # Isolate if this specific block row belongs to our logged in user
+        if shift.user_id == active_id:
+            user_assigned_days.append(date_str)
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="Scheduler.html",
+        context={
+            "team_capacities": team_capacity_map,
+            "user_shifts": user_assigned_days,
+            "active_user_id": active_id,
+            "is_manager": is_manager
+        }
+    )
