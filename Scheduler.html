@@ -59,7 +59,9 @@
     <div class="hero-section text-center">
         <div class="container">
             <h1 class="display-4 font-serif mb-2">Volunteer Schedule</h1>
-            <p class="lead mb-0">Select all days you are available to work</p>
+            <p class="lead mb-0">Select all days you are available to work.
+                Work hours are always from 10:00 till 17:00
+            </p>
         </div>
     </div>
 
@@ -100,7 +102,7 @@
                             <div class="availability-number" id="selectedCount">0</div>
                             <small class="text-muted">Days Selected</small>
                         </div>
-                        <p class="text-muted mb-0">Select as many days as you're available on the calendar.</p>
+                        <p class="text-muted mb-0">Select dates you can work your number of days</p>
                     </div>
                 </div>
 
@@ -187,19 +189,19 @@ let currentDate   = new Date();
 let currentMonth  = currentDate.getMonth();
 let currentYear   = currentDate.getFullYear();
 
-// Read data safely from the hidden HTML input bridges
 const activeUserId = parseInt(document.getElementById('dbActiveUserId').value) || 1;
 
-// Parse the array strings back into standard JS Arrays and Objects
-const rawShiftsArray = JSON.parse(document.getElementById('dbUserShifts').value);
+// Parse the raw items dictionary back into standard JS objects
+const rawShiftsObj = JSON.parse(document.getElementById('dbUserShifts').value);
 const rawCapacitiesObj = JSON.parse(document.getElementById('dbTeamCapacities').value);
 
-// Initialize your tracking engines cleanly!
+// Initialize your engines cleanly!
 let selectedDays       = new Set();
-let assignedDays       = new Set(rawShiftsArray);
 let databaseCapacities = rawCapacitiesObj;
 
-// Daily capacity limits (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5)
+// Keep track of existing shifts and their strict states locally
+let existingShifts     = new Map(Object.entries(rawShiftsObj)); 
+
 const DAY_CAPACITY = {
     1: { max: 6 },  // Monday
     2: { max: 8 },  // Tuesday
@@ -208,23 +210,66 @@ const DAY_CAPACITY = {
     5: { max: 5 }   // Friday
 };
 
-let fullDays = new Set();
 const monthNames = [
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
 ];
 const WEEKEND_DAYS = [0, 6];
 
-// ... (Rest of your renderCalendar and toggleDay functions stay exactly as they were)
-
 document.addEventListener('DOMContentLoaded', function () {
     updateAssignedDaysInfo();
     renderCalendar();
     updateAvailabilityDisplay();
+    
+    // Listen to changes on the preference input field
+    const daysWantedInput = document.getElementById('daysWanted');
+    if (daysWantedInput) {
+        daysWantedInput.addEventListener('input', () => {
+            const todayStr = formatDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+            
+            // Only count approved future shifts for the min boundary
+            let assignedCount = 0;
+            for (let [dateStr, status] of existingShifts.entries()) {
+                if (status === 'approved' && dateStr >= todayStr) {
+                    assignedCount++;
+                }
+            }
+            
+            const currentVal = parseInt(daysWantedInput.value) || 0;
+            if (currentVal < assignedCount) {
+                daysWantedInput.value = assignedCount;
+            }
+            
+            validateSelection();
+            updateSubmitButton();
+        });
+    }
 });
 
+// Helper function to dynamically count active tracking days from today onwards
+function getActiveFutureShiftsCount() {
+    const todayStr = formatDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    let activeCount = 0;
+    
+    for (let [dateStr, status] of existingShifts.entries()) {
+        // Only count valid, non-expired database entries
+        if (dateStr >= todayStr) {
+            activeCount++;
+        }
+    }
+    return activeCount;
+}
+
 function updateAssignedDaysInfo() {
-    const assignedCount = assignedDays.size;
+    const todayStr = formatDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    
+    let assignedCount = 0;
+    for (let [dateStr, status] of existingShifts.entries()) {
+        if (status === 'approved' && dateStr >= todayStr) {
+            assignedCount++;
+        }
+    }
+
     const daysWantedInput = document.getElementById('daysWanted');
     const assignedInfo = document.getElementById('assignedDaysInfo');
     const assignedCountDisplay = document.getElementById('assignedCountDisplay');
@@ -278,8 +323,18 @@ function renderCalendar() {
         if (!isWeekend) {
             if (isPast) {
                 day.classList.add('past');
-            } else if (assignedDays.has(dateStr)) {
-                day.classList.add('assigned');
+            } else if (existingShifts.has(dateStr)) {
+                const status = existingShifts.get(dateStr);
+                
+                if (status === 'approved') {
+                    day.classList.add('approved-shift');
+                    day.title = "Shift Approved - Cannot be deselected";
+                } else {
+                    day.classList.add('scheduled-shift');
+                    day.title = "Shift Scheduled - Click to deselect";
+                }
+                
+                day.addEventListener('click', () => toggleDay(dateStr, day));
             } else {
                 const cap = getDayCapacity(dateStr, dayOfWeek);
                 if (cap.current >= cap.max) {
@@ -330,12 +385,9 @@ function createDayElement(dayNum, isOtherMonth, isWeekend, dateStr, dayOfWeek) {
 
 function getDayCapacity(dateStr, dayOfWeek) {
     let baseCount = databaseCapacities[dateStr] || 0;
-    
-    // Add local choice selections real-time adjustments before hitting submit
-    if (selectedDays.has(dateStr) && !assignedDays.has(dateStr)) {
+    if (selectedDays.has(dateStr) && !existingShifts.has(dateStr)) {
         baseCount++;
     }
-    
     return {
         current: baseCount,
         max: DAY_CAPACITY[dayOfWeek] ? DAY_CAPACITY[dayOfWeek].max : 5
@@ -347,19 +399,30 @@ function formatDate(year, month, day) {
 }
 
 function toggleDay(dateStr, element) {
-    const dateObj = new Date(dateStr);
-    const dayOfWeek = dateObj.getDay();
-    const capacity = getDayCapacity(dateStr, dayOfWeek);
-    
-    if (!selectedDays.has(dateStr) && capacity.current >= capacity.max) {
-        showToast('This day has hit maximum staffing capacity capacity.');
+    if (existingShifts.has(dateStr) && existingShifts.get(dateStr) === 'approved') {
+        showToast('This shift has been approved and cannot be changed by volunteers.');
         return;
     }
 
-    if (selectedDays.has(dateStr)) {
-        selectedDays.delete(dateStr);
+    if (existingShifts.has(dateStr) && existingShifts.get(dateStr) === 'scheduled') {
+        existingShifts.delete(dateStr); 
+        if (databaseCapacities[dateStr]) databaseCapacities[dateStr]--; 
+        showToast(`Cancelled selection for ${dateStr}. Remember to click submit to finalize.`);
     } else {
-        selectedDays.add(dateStr);
+        const dateObj = new Date(dateStr);
+        const dayOfWeek = dateObj.getDay();
+        const capacity = getDayCapacity(dateStr, dayOfWeek);
+        
+        if (!selectedDays.has(dateStr) && capacity.current >= capacity.max) {
+            showToast('This day has hit maximum staffing capacity.');
+            return;
+        }
+
+        if (selectedDays.has(dateStr)) {
+            selectedDays.delete(dateStr);
+        } else {
+            selectedDays.add(dateStr);
+        }
     }
     
     updateAvailabilityDisplay();
@@ -368,21 +431,24 @@ function toggleDay(dateStr, element) {
 }
 
 function updateAvailabilityDisplay() {
-    document.getElementById('selectedCount').textContent = selectedDays.size;
+    // FIX: Only combine active selections with active shifts that occur today or in the future
+    const totalSelectedCount = selectedDays.size + getActiveFutureShiftsCount();
+    document.getElementById('selectedCount').textContent = totalSelectedCount;
     updateSubmitButton();
 }
 
 function validateSelection() {
-    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    const daysWantedInput = document.getElementById('daysWanted');
+    const daysWanted = parseInt(daysWantedInput.value) || 0;
     const validationAlert = document.getElementById('validationAlert');
     const validationMessage = document.getElementById('validationMessage');
 
-    // Combine what is already in database + what they clicked right now
-    const totalSelectedCount = selectedDays.size + assignedDays.size;
+    // FIX: Validate using the filtered future shift total
+    const totalSelectedCount = selectedDays.size + getActiveFutureShiftsCount();
 
     if (totalSelectedCount < daysWanted) {
         validationAlert.classList.remove('d-none');
-        validationMessage.textContent = `You must match your preference of ${daysWanted} days total. (Currently: ${totalSelectedCount})`;
+        validationMessage.textContent = `You must match or exceed your preference of ${daysWanted} days total. (Currently: ${totalSelectedCount})`;
         return false;
     } else {
         validationAlert.classList.add('d-none');
@@ -392,7 +458,15 @@ function validateSelection() {
 
 function updateSubmitButton() {
     const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = selectedDays.size === 0;
+    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    const totalSelectedCount = selectedDays.size + getActiveFutureShiftsCount();
+
+    if (totalSelectedCount < daysWanted) {
+        submitBtn.disabled = true;
+    } else {
+        const originalCount = Object.keys(rawShiftsObj).length;
+        submitBtn.disabled = (selectedDays.size === 0 && existingShifts.size === originalCount);
+    }
 }
 
 function changeMonth(delta) {
@@ -402,12 +476,28 @@ function changeMonth(delta) {
     renderCalendar();
 }
 
-// REWRITE: LIVE FETCH PUSH ACTION CONNECTING TO FASTAPI SQL ENDPOINT
 function submitSchedule() {
+    if (!validateSelection()) {
+        showToast('Submission blocked: You must select more or equal days than your requested total.');
+        return;
+    }
+
     const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
+    const consolidatedDays = new Set();
     
-    // Package up combined items list payload array
-    const compiledList = Array.from(selectedDays);
+    for (let [dateStr, status] of existingShifts.entries()) {
+        consolidatedDays.add(dateStr);
+    }
+    
+    const freshAdditions = [];
+    selectedDays.forEach(dateStr => {
+        consolidatedDays.add(dateStr);
+        if (!existingShifts.has(dateStr)) {
+            freshAdditions.push(dateStr);
+        }
+    });
+    
+    const compiledList = Array.from(consolidatedDays);
 
     fetch('/submit-schedule', {
         method: 'POST',
@@ -421,10 +511,21 @@ function submitSchedule() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            showToast('Your updated shift availability is locked into Azure Database!');
+            showToast('Your updated shift availability is locked into the Database!');
             
-            // Move newly created items into tracking arrays seamlessly without full reload
-            compiledList.forEach(day => assignedDays.add(day));
+            freshAdditions.forEach(day => {
+                if (databaseCapacities[day] !== undefined) {
+                    databaseCapacities[day]++;
+                } else {
+                    databaseCapacities[day] = 1;
+                }
+            });
+
+            compiledList.forEach(day => {
+                if (!existingShifts.has(day)) {
+                    existingShifts.set(day, 'scheduled');
+                }
+            });
             selectedDays.clear();
             
             updateAssignedDaysInfo();
