@@ -193,7 +193,7 @@ h6,
 
 /* ── FOOTER ── */
 .footer-custom {
-  background: var(--graphite);
+  background: var(--muted-teal);
   color: var(--linen);
   padding: 2rem 0;
   margin-top: 3rem;
