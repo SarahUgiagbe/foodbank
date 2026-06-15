@@ -663,6 +663,7 @@ function openUrgentModal() {
     modal.show();
 }
 
+/*
 function sendUrgentMessage() {
     const plainText = urgentQuill.getText().trim();
 
@@ -684,6 +685,49 @@ function sendUrgentMessage() {
     modal.hide();
 
     showToast('Urgent message sent to all volunteers!');
+}
+    */
+
+function sendUrgentMessage() {
+    const plainText = urgentQuill.getText().trim();
+
+    if (plainText === '') {
+        alert('Please write a message before sending.');
+        return;
+    }
+
+    // Capture the rich-text layout HTML (includes bold, paragraph tags, etc.)
+    const formattedMessage = urgentQuill.root.innerHTML;
+
+    // Fire data payload over to the FastAPI Python environment
+    fetch('/api/urgent-message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message_html: formattedMessage
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Close down modal window programmatically
+            const modalElement = document.getElementById('urgentMessageModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            showToast('Urgent message sent to all volunteers!');
+        } else {
+            alert('Failed to send message: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending broadcast:', error);
+        alert('An error occurred while transmitting your message to the server.');
+    });
 }
 /*----------------------
 Note that formattedMessage now contains the full HTML with bold tags, italic tags etc. — this is what your group-mate will need to save to the database and send to volunteers.

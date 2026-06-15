@@ -7,6 +7,8 @@
 #Hovering over profile picture in navbar does makes whole page shift down
 #Add a logout button? Just a button that links back to login page
 
+#Notifications sorted backwards
+
 #Manager Schedulor page-----------
 #Accepting or refusing a shift does not update the staff requests
 
@@ -133,6 +135,10 @@ class NewDonationPayload(BaseModel):
 class UpdateQuantitiesPayload(BaseModel):
     items: list[dict] # Expected format: [{"id": 1, "quantity": 12}, ...]
 
+#For urgent messages
+class UrgentMessagePayload(BaseModel):
+    message_html: str
+
 
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
@@ -197,6 +203,7 @@ def view_contact_page(request: Request, db: Session = Depends(get_db)):
     )
 
 #Almost Finished. Need more data in database?
+# Almost Finished. Need more data in database?
 @app.get("/notifications.html", response_class=HTMLResponse)  
 def view_notifications_page(request: Request, db: Session = Depends(get_db)):
     global current_logged_in_id
@@ -206,7 +213,11 @@ def view_notifications_page(request: Request, db: Session = Depends(get_db)):
     user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
     is_manager = user.is_manager if user else False
 
-    db_notifications = db.query(Notification).filter(Notification.user_id == active_id).all()
+    # FIX: Added .order_by(Notification.created_at.desc()) to pull newest first
+    db_notifications = db.query(Notification)\
+                         .filter(Notification.user_id == active_id)\
+                         .order_by(Notification.created_at.desc())\
+                         .all()
     
     formatted_notifications = {}
     for n in db_notifications:
@@ -432,6 +443,39 @@ def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db))
         context={"is_manager": True}
     )
 
+@app.post("/api/urgent-message")
+def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(get_db)):
+    try:
+        # Fetch every user ID from the system
+        all_users = db.query(UserProfile.user_id).all()
+        
+        if not all_users:
+            return {"status": "error", "message": "No users found in database."}
+
+        # Generate the current time as a clean string format
+        current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Loop through and create a notification row for every individual user
+        for user_row in all_users:
+            new_notification = Notification(
+                user_id=user_row.user_id,
+                content=payload.message_html,
+                # Use text() to force PostgreSQL to accept the string as a timestamp
+                created_at=text(f"'{current_time_str}'::timestamp")
+            )
+            db.add(new_notification)
+            
+        db.commit()
+        return {"status": "success", "message": f"Broadcasted message to {len(all_users)} users."}
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Error broadcasting message: {e}")
+        return {"status": "error", "message": str(e)}
+    
+print("test")
+#END Maneger page-----------------------------------------------------------------------------------------
+
 #john@example.com
 #hashedpassword1
 
@@ -447,4 +491,5 @@ def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db))
 #David
 #hashedpassword5
 
-#Change links for all pages 
+#Sam to do
+#Create add messages part for manager schedulor page
