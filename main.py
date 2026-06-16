@@ -143,6 +143,14 @@ class DayStaffResponse(BaseModel):
     working: list[dict]  # Will hold approved items: [{"name": "John", "role": "Volunteer"}]
     requests: list[dict] # Will hold scheduled items: [{"name": "Emma"}]
 
+class SingleShiftChange(BaseModel):
+    name: str
+    date: str  # Format: YYYY-MM-DD
+    action: str  # 'accept', 'reject', or 'remove'
+
+class BatchShiftPayload(BaseModel):
+    changes: list[SingleShiftChange]
+
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
     db = SessionLocal()  # Open the connection workspace
@@ -435,6 +443,47 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
 
 
 #START MANAGER SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
+
+@app.post("/api/shifts/batch-update")
+def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db)):
+    try:
+        for change in payload.changes:
+            # 1. Map the text string 'name' to its unique numeric database 'user_id'
+            user = db.query(UserProfile).filter(UserProfile.full_name == change.name).first()
+            if not user:
+                print(f"⚠️ Warning: User named '{change.name}' could not be matched in database.")
+                continue  # Safe skip to prevent query errors
+            
+            # Parse the incoming date string into a structured Python date object
+            parsed_date = datetime.strptime(change.date, "%Y-%m-%d").date()
+
+            # 2. Locate the matching record in your shifts table
+            shift_record = db.query(Shift).filter(
+                Shift.user_id == user.user_id,
+                Shift.shift_date == parsed_date
+            ).first()
+
+            # 3. Apply the dynamic transactional rules requested
+            if change.action == "accept":
+                if shift_record:
+                    shift_record.status = "approved"
+            
+            elif change.action == "reject":
+                if shift_record:
+                    db.delete(shift_record)
+            
+            elif change.action == "remove":
+                if shift_record:
+                    db.delete(shift_record)
+
+        # Commit all modified entries to Azure PostgreSQL simultaneously
+        db.commit()
+        return {"status": "success", "message": "All staging area changes saved successfully."}
+
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Batch Update Database error details: {e}")
+        return {"status": "error", "message": str(e)}
 
 @app.get("/api/shifts/by-date/{date_str}", response_model=DayStaffResponse)
 def get_shifts_by_date(date_str: str, db: Session = Depends(get_db)):

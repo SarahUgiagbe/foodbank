@@ -561,33 +561,62 @@ function changeMonth(delta) {
     renderCalendar();
 }
 
+/* ===================================================================
+SUBMIT AVAILABILITY / SAVE ENGINE
+===================================================================
+Fires when the primary "Submit Availability" action bar at the bottom is pressed.
+It batches the staged updates and commits them straight to your FastAPI layer.
+*/
 function submitSchedule() {
-    const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
-    
-    if (!validateSelection()) {
-        showToast('Please select at least ' + daysWanted + ' days.');
+    if (pendingChanges.length === 0) {
+        showToast('No outstanding schedule modifications or requests to submit.');
         return;
     }
 
-    const sorted = Array.from(selectedDays).sort();
-    const daysList = sorted.map(dateStr => {
-        const [y, m, d] = dateStr.split('-');
-        return new Date(y, m - 1, d).toLocaleDateString('en-US', {
-            weekday: 'long', month: 'long', day: 'numeric'
-        });
+    if (!confirm(`Are you sure you want to finalize and submit these ${pendingChanges.length} scheduler modification(s)?`)) {
+        return;
+    }
+
+    // Map local staging actions directly into valid structured transaction items
+    const databasePayload = pendingChanges.map(change => {
+        return {
+            name: change.name,
+            date: change.date,
+            action: change.type // Passes string values: 'accept', 'reject', or 'remove'
+        };
     });
 
-    const message =
-        `We Share & Care Food Bank\n\n` +
-        `Days you want to work: ${daysWanted}\n` +
-        `Days you're available: ${selectedDays.size}\n\n` +
-        `Your available days:\n${daysList.join('\n')}\n\n` +
-        `Submit this availability?`;
-
-    if (confirm(message)) {
-        assignWorkDays(sorted, daysWanted);
-        showToast('Thank you! Your availability has been submitted.');
-    }
+    fetch('/api/shifts/batch-update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ changes: databasePayload })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to successfully commit transactional changes.');
+        return response.json();
+    })
+    .then(data => {
+        showToast('Schedule modifications successfully updated in database!');
+        
+        // Clean up client transaction cache states
+        pendingChanges = [];
+        persistentDisabledRows.clear();
+        
+        // Dynamic ui view updates
+        renderRecentChanges();
+        renderCalendar();
+        
+        // If an active popup window configuration is open, load clean database values
+        if (currentModalDate) {
+            loadStaffSchedule();
+        }
+    })
+    .catch(error => {
+        console.error('Error handling transaction syncing updates:', error);
+        alert('An unexpected database error occurred while updating the scheduling metrics.');
+    });
 }
 
 function assignWorkDays(sortedDays, count) {
@@ -702,7 +731,13 @@ function acceptRequest(name, buttonElement) {
     }
 
     persistentDisabledRows.add(listItem.id);
-    addPendingChange(`${name} - Shift Accepted (${formatDateDMY(currentModalDate)})`, listItem.id, 'accept');
+    addPendingChange(
+        `${name} - Shift Accepted (${formatDateDMY(currentModalDate)})`, 
+        listItem.id, 
+        'accept', 
+        name, 
+        currentModalDate
+    );
 }
 
 function rejectRequest(name, buttonElement) {
@@ -716,7 +751,13 @@ function rejectRequest(name, buttonElement) {
     }
 
     persistentDisabledRows.add(listItem.id);
-    addPendingChange(`${name} - Shift Rejected (${formatDateDMY(currentModalDate)})`, listItem.id, 'reject');
+    addPendingChange(
+        `${name} - Shift Rejected (${formatDateDMY(currentModalDate)})`, 
+        listItem.id, 
+        'reject', 
+        name, 
+        currentModalDate
+    );
 }
 
 function removeStaff(name, buttonElement) {
@@ -728,13 +769,26 @@ function removeStaff(name, buttonElement) {
     }
 
     persistentDisabledRows.add(listItem.id);
-    addPendingChange(`${name} - Removed from shift (${formatDateDMY(currentModalDate)})`, listItem.id, 'remove');
+    addPendingChange(
+        `${name} - Removed from shift (${formatDateDMY(currentModalDate)})`, 
+        listItem.id, 
+        'remove', 
+        name, 
+        currentModalDate
+    );
 }
 
 /* This is for storing data temporarily, for removing things in the recent changes card. */
-function addPendingChange(text, relatedRowId, type) {
+function addPendingChange(text, relatedRowId, type, name, date) {
     const changeId = `change-${Date.now()}`;
-    pendingChanges.push({ id: changeId, text: text, relatedRowId: relatedRowId, type: type });
+    pendingChanges.push({ 
+        id: changeId, 
+        text: text, 
+        relatedRowId: relatedRowId, 
+        type: type, 
+        name: name, 
+        date: date 
+    });
     renderRecentChanges();
 }
 
