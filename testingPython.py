@@ -464,3 +464,37 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
             "is_manager": is_manager
         }
     )
+
+@app.get("/scheduler.html", response_class=HTMLResponse)  
+def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
+    all_shifts = db.query(Shift).all()
+
+    team_capacity_map = {}
+    # CHANGED: Dict to store date mapping to its specific status {"2026-06-10": "scheduled"}
+    user_assigned_shifts = {}
+
+    for shift in all_shifts:
+        date_str = str(shift.shift_date).strip()
+        
+        team_capacity_map[date_str] = team_capacity_map.get(date_str, 0) + 1
+        
+        if shift.user_id == active_id:
+            # Save the exact status string from the database (lowercased for safety)
+            user_assigned_shifts[date_str] = shift.status.lower() if shift.status else "scheduled"
+
+    return templates.TemplateResponse(
+        request=request, 
+        name="Scheduler.html",
+        context={
+            "team_capacities": team_capacity_map,
+            "user_shifts": user_assigned_shifts,  # <-- Sending the dict structured data now
+            "active_user_id": active_id,
+            "is_manager": is_manager
+        }
+    )
