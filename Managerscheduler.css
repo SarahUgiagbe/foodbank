@@ -291,3 +291,17 @@
   padding: 6px 12px; /* Bootstrap's default btn padding */
   font-size: 1rem;
 }
+
+/* This will grey out and strike through any row marked as pending. */
+.list-group-item.pending-change {
+  opacity: 1;
+}
+
+.list-group-item.pending-change span {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.card-header-recent-changes {
+  background: var(--berry-blush);
+}

@@ -113,18 +113,13 @@
 
                 <!--! RECENT EDITS FROM MANAGEMENT -->
                 <div class="card h-100">
-                    <div class="card-header-bronze">
+                    <div class="card-header-bronze card-header-recent-changes">
                         <h5 class="mb-0">Recent Changes</h5>
                     </div>
                     <div style="overflow-y: auto; max-height: 300px;"> <!--* SCROLLING FEATURE -->
-                    <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start">
-                        <div class="availability-box">
-                            <!--<div class="availability-number" id="selectedCount">0</div>-->
-                            <small class="text-muted">Amelia</small>
-                            <br>
-                            <small class="text-muted">22/06/2026 Accepted<br>23/06/2026 Rejected<br>24/06/2026 Accepted</small>
+                        <div class="card-body p-4" id="recentChangesContainer" style="overflow-y: auto; max-height: 250px;">
+                        <p class="text-muted text-center">No recent changes.</p>
                         </div>
-                    </div>
                     </div>
                 </div>
 
@@ -260,6 +255,8 @@ let currentYear   = currentDate.getFullYear();
 let selectedDays  = new Set();
 let assignedDays  = new Set();
 let urgentQuill = null;
+let pendingChanges = [];
+let currentModalDate = null;
 
 // Daily capacity limits (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5)
 const DAY_CAPACITY = {
@@ -656,8 +653,9 @@ function assignWorkDays(sortedDays, count) {
     updateAvailabilityDisplay();
 }
 
-/* ADDED THANKS TO CLAUDE */
+
 function openModal(dateStr) {
+    currentModalDate = dateStr;
     // Set the date in the modal header
     const [y, m, d] = dateStr.split('-');
     const dateObj = new Date(y, m - 1, d);
@@ -764,27 +762,82 @@ Note that formattedMessage now contains the full HTML with bold tags, italic tag
 ------------------------*/
 
 function acceptRequest(name) {
-    // Remove the list item
     const listItem = document.getElementById(`request-${name}`);
-    listItem.remove();
+    listItem.classList.add('pending-change');
 
-    // Show the alert
-    showToast('The shift has been accepted.');
+    addPendingChange(`${name} - Shift Accepted (${formatDateDMY(currentModalDate)})`, listItem.id, 'accept');
 }
 
 function rejectRequest(name) {
-    // Remove the list item
     const listItem = document.getElementById(`request-${name}`);
-    listItem.remove();
+    listItem.classList.add('pending-change');
 
-    //Show the alert
-    showToast('The shift has been rejected.');
+    addPendingChange(`${name} - Shift Rejected (${formatDateDMY(currentModalDate)})`, listItem.id, 'reject');
 }
 
 function removeStaff(name) {
     const listItem = document.getElementById(`staff-${name}`);
-    listItem.remove();
-    showToast('The volunteer has been removed from this shift.');
+    listItem.classList.add('pending-change');
+
+    addPendingChange(`${name} - Removed from shift (${formatDateDMY(currentModalDate)})`, listItem.id, 'remove');
+}
+
+/* This is for storing data temporarily, for removing things in the recent changes card. */
+function addPendingChange(text, relatedRowId, type) {
+    const changeId = `change-${Date.now()}`;
+    pendingChanges.push({ id: changeId, text: text, relatedRowId: relatedRowId, type: type });
+    renderRecentChanges();
+}
+
+/* This clears the existing HTML container and rebuilds one box per pending change, each with its own "Undo" button. */
+function renderRecentChanges() {
+    const container = document.getElementById('recentChangesContainer');
+
+    if (pendingChanges.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">No recent changes.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    pendingChanges.forEach(change => {
+        const box = document.createElement('div');
+        box.className = 'availability-box d-flex justify-content-between align-items-center';
+        box.id = change.id;
+
+        const text = document.createElement('small');
+        text.className = 'text-muted';
+        text.textContent = change.text;
+
+        const undoBtn = document.createElement('button');
+        undoBtn.className = 'btn btn-sm';
+        undoBtn.style.backgroundColor = '#8E5572';
+        undoBtn.style.color = 'white';
+        undoBtn.textContent = 'Undo';
+        undoBtn.onclick = () => undoChange(change.id);
+
+        box.appendChild(text);
+        box.appendChild(undoBtn);
+        container.appendChild(box);
+    });
+}
+
+function undoChange(changeId) {
+    const change = pendingChanges.find(c => c.id === changeId);
+
+    if (change) {
+        const row = document.getElementById(change.relatedRowId);
+        if (row) {
+            row.classList.remove('pending-change');
+        }
+    }
+
+    pendingChanges = pendingChanges.filter(c => c.id !== changeId);
+    renderRecentChanges();
+}
+
+function formatDateDMY(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year}`;
 }
 
 </script>
