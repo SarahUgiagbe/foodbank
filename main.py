@@ -1,11 +1,10 @@
-#Bug in navigation bar for inventory page
 #How many days do you want to work not working as intended
 #Message saying "you are already assigned days is wrong"
 #You are already assigned days needs to ignore previous days
 #Cannot unselect days in scheduler page
 #No difference betwwen assigned days and days they want to work
 #Hovering over profile picture in navbar does makes whole page shift down
-#Add a logout button? Just a button that links back to login page
+
 
 #Notifications sorted backwards
 
