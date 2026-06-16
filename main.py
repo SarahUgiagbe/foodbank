@@ -82,7 +82,7 @@ def set_active_user(payload: LoginPayload):
     print(f"Python received the user ID number: {current_logged_in_id}")
     return {"status": "received"}
 
-#Database table blueprint for user profile
+# Database table blueprint for user profile
 class UserProfile(Base):
     __tablename__ = "users"  # Tells Python to search your "users" table
 
@@ -94,6 +94,7 @@ class UserProfile(Base):
     role = Column(String)
     is_manager = Column(Boolean)
     age = Column(Integer)
+    days_worked_in_month = Column(Integer)
 
 #Database table blueprint for notifications
 class Notification(Base):
@@ -261,7 +262,8 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
             "phone_number": user.phone_number,
             "role": user.role,
             "is_manager": user.is_manager,
-            "age": user.age
+            "age": user.age,
+            "working_days": user.days_worked_in_month
         }
     # 3. Pass the complete dictionary containing everyone over to Login.html
     return templates.TemplateResponse(
@@ -287,16 +289,16 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
     all_shifts = db.query(Shift).all()
 
     team_capacity_map = {}
-    # CHANGED: Dict to store date mapping to its specific status {"2026-06-10": "scheduled"}
     user_assigned_shifts = {}
 
     for shift in all_shifts:
         date_str = str(shift.shift_date).strip()
         
-        team_capacity_map[date_str] = team_capacity_map.get(date_str, 0) + 1
+        # FIX: Only increment the calendar capacity counter if the shift is officially approved!
+        if shift.status == 'approved':
+            team_capacity_map[date_str] = team_capacity_map.get(date_str, 0) + 1
         
         if shift.user_id == active_id:
-            # Save the exact status string from the database (lowercased for safety)
             user_assigned_shifts[date_str] = shift.status.lower() if shift.status else "scheduled"
 
     return templates.TemplateResponse(
@@ -304,7 +306,7 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
         name="Scheduler.html",
         context={
             "team_capacities": team_capacity_map,
-            "user_shifts": user_assigned_shifts,  # <-- Sending the dict structured data now
+            "user_shifts": user_assigned_shifts,  
             "active_user_id": active_id,
             "is_manager": is_manager
         }
@@ -319,20 +321,19 @@ class ScheduleSubmitPayload(BaseModel):
 @app.post("/submit-schedule")
 def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get_db)):
     try:
-        # Clear out previous placeholder shifts for this specific user
+        # Clear out previous placeholder/scheduled shifts for this user safely
         db.query(Shift).filter(
             Shift.user_id == payload.user_id, 
             Shift.status != 'approved'
         ).delete()
 
-        # Insert new rows into the shifts database
+        # Rebuild fresh selections if any exist. Empty collections safely skip this block.
         for day_string in payload.available_days:
-            # Convert incoming text string "YYYY-MM-DD" into a real Python date object
             parsed_date = datetime.strptime(day_string, "%Y-%m-%d").date()
 
             new_shift = Shift(
                 user_id=payload.user_id,
-                shift_date=parsed_date,  # <-- Pushing a real date object stops the crash!
+                shift_date=parsed_date,  
                 start_time="09:00",      
                 end_time="17:00",        
                 status="scheduled"       
@@ -340,7 +341,8 @@ def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get
             db.add(new_shift)
             
         db.commit()
-        return {"status": "success", "message": "Schedule stored in PostgreSQL cloud storage."}
+        return {"status": "success", "message": "Schedule updated successfully."}
+        
     except Exception as e:
         db.rollback()
         print(f"Database error details: {e}")
@@ -466,7 +468,7 @@ def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(
         print(f"Error broadcasting message: {e}")
         return {"status": "error", "message": str(e)}
     
-print("test")
+
 #END Maneger page-----------------------------------------------------------------------------------------
 
 #john@example.com
@@ -487,3 +489,4 @@ print("test")
 #Sam to do
 #Need to test with Oche the messaging works properly and for him to add custom messages for the presentation
 #Check schedulor page is sending data properly
+#John @example not working???
