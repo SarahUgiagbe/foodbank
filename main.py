@@ -140,6 +140,9 @@ class UpdateQuantitiesPayload(BaseModel):
 class UrgentMessagePayload(BaseModel):
     message_html: str
 
+class DayStaffResponse(BaseModel):
+    working: list[dict]  # Will hold approved items: [{"name": "John", "role": "Volunteer"}]
+    requests: list[dict] # Will hold scheduled items: [{"name": "Emma"}]
 
 # Safety function to open a database connection per page load, and close it when done
 def get_db():
@@ -433,19 +436,41 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
 
 
 #START MANAGER SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
-@app.get("/Managerscheduler.html", response_class=HTMLResponse)  
-def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db)):
-    global current_logged_in_id
-    active_id = current_logged_in_id if current_logged_in_id is not None else 1
-    
-    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
-    
-    # This opens your ManagerScheduler.html file
-    return templates.TemplateResponse(
-        request=request, 
-        name="ManagerScheduler.html", 
-        context={"is_manager": True}
-    )
+
+@app.get("/api/shifts/by-date/{date_str}", response_model=DayStaffResponse)
+def get_shifts_by_date(date_str: str, db: Session = Depends(get_db)):
+    try:
+        # Parse incoming date parameter string (YYYY-MM-DD) safely
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        
+        # Pull all database records recorded for this day
+        day_shifts = db.query(Shift).filter(Shift.shift_date == parsed_date).all()
+        
+        working_list = []
+        requests_list = []
+        
+        for s in day_shifts:
+            # Query the user profile to fetch the volunteer's real full name and role mapping
+            user_profile = db.query(UserProfile).filter(UserProfile.user_id == s.user_id).first()
+            full_name = user_profile.full_name if user_profile else f"User #{s.user_id}"
+            user_role = user_profile.role if user_profile else "Volunteer"
+            
+            # Map structural components matching your frontend modal render cycles
+            shift_info = {
+                "name": full_name,
+                "role": user_role
+            }
+            
+            if s.status == "approved":
+                working_list.append(shift_info)
+            elif s.status == "scheduled":
+                requests_list.append(shift_info)
+                
+        return {"working": working_list, "requests": requests_list}
+        
+    except Exception as e:
+        print(f"Error fetching day breakdown details: {e}")
+        return {"working": [], "requests": []}
 
 @app.post("/api/urgent-message")
 def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(get_db)):
@@ -477,6 +502,58 @@ def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(
         print(f"Error broadcasting message: {e}")
         return {"status": "error", "message": str(e)}
     
+@app.get("/Managerscheduler.html", response_class=HTMLResponse)  
+def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db)):
+    global current_logged_in_id
+    active_id = current_logged_in_id if current_logged_in_id is not None else 1
+    
+    user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
+    is_manager = user.is_manager if user else False
+
+    # Get today's local date to compare against database entries
+    today_date = datetime.now().date()
+
+    # 1. FETCH PENDING SHIFTS THAT ARE TODAY OR IN THE FUTURE
+    pending_shifts = db.query(Shift).filter(
+        Shift.status == "scheduled",
+        Shift.shift_date >= today_date  # <-- Filters out any dates before today
+    ).all()
+
+    # 2. GROUP SHIFTS BY USER ID TO AGGREGATE DATES
+    requests_map = {}
+    
+    for shift in pending_shifts:
+        u_id = shift.user_id
+        date_str = shift.shift_date.strftime("%d/%m/%Y") if shift.shift_date else ""
+        
+        if u_id not in requests_map:
+            volunteer = db.query(UserProfile).filter(UserProfile.user_id == u_id).first()
+            v_name = volunteer.full_name if volunteer else f"User #{u_id}"
+            v_preference = volunteer.days_worked_in_month if volunteer and volunteer.days_worked_in_month else 0
+            
+            requests_map[u_id] = {
+                "volunteer_name": v_name,
+                "available_dates": [],
+                "days_wanted": v_preference
+            }
+            
+        if date_str and date_str not in requests_map[u_id]["available_dates"]:
+            requests_map[u_id]["available_dates"].append(date_str)
+
+    # Flatten map collections into a clean list layout for your template loops
+    shift_requests_list = list(requests_map.values())
+
+    # 3. PASS THE DATA TO THE TEMPLATE
+    return templates.TemplateResponse(
+        request=request, 
+        name="ManagerScheduler.html", 
+        context={
+            "is_manager": is_manager,
+            "shift_requests": shift_requests_list
+        }
+    )
+
+
 
 #END Maneger page-----------------------------------------------------------------------------------------
 
