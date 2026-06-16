@@ -285,6 +285,9 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
 
     user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
     is_manager = user.is_manager if user else False
+    
+    # FETCH CURRENT SELECTION: Grab the saved number of days, defaulting to 0 if not found
+    days_worked_saved = user.days_worked_in_month if user and user.days_worked_in_month is not None else 0
 
     all_shifts = db.query(Shift).all()
 
@@ -294,7 +297,7 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
     for shift in all_shifts:
         date_str = str(shift.shift_date).strip()
         
-        # FIX: Only increment the calendar capacity counter if the shift is officially approved!
+        # Only increment the calendar capacity counter if the shift is officially approved!
         if shift.status == 'approved':
             team_capacity_map[date_str] = team_capacity_map.get(date_str, 0) + 1
         
@@ -308,7 +311,8 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
             "team_capacities": team_capacity_map,
             "user_shifts": user_assigned_shifts,  
             "active_user_id": active_id,
-            "is_manager": is_manager
+            "is_manager": is_manager,
+            "days_worked_saved": days_worked_saved # PASS TO TEMPLATE HERE
         }
     )
 
@@ -321,13 +325,18 @@ class ScheduleSubmitPayload(BaseModel):
 @app.post("/submit-schedule")
 def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get_db)):
     try:
-        # Clear out previous placeholder/scheduled shifts for this user safely
+        # 1. UPDATE USER PREFERENCE: Save the value directly to the users table row
+        user_profile = db.query(UserProfile).filter(UserProfile.user_id == payload.user_id).first()
+        if user_profile:
+            user_profile.days_worked_in_month = payload.days_wanted
+
+        # 2. Clear out previous placeholder/scheduled shifts for this user safely
         db.query(Shift).filter(
             Shift.user_id == payload.user_id, 
             Shift.status != 'approved'
         ).delete()
 
-        # Rebuild fresh selections if any exist. Empty collections safely skip this block.
+        # 3. Rebuild fresh selections if any exist. Empty collections safely skip this block.
         for day_string in payload.available_days:
             parsed_date = datetime.strptime(day_string, "%Y-%m-%d").date()
 
@@ -341,7 +350,7 @@ def save_user_schedule(payload: ScheduleSubmitPayload, db: Session = Depends(get
             db.add(new_shift)
             
         db.commit()
-        return {"status": "success", "message": "Schedule updated successfully."}
+        return {"status": "success", "message": "Schedule and preferences updated successfully."}
         
     except Exception as e:
         db.rollback()
@@ -474,7 +483,7 @@ def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(
 #john@example.com
 #hashedpassword1
 
-#John
+#Sarah
 #hashedpassword2
 
 #Mike
