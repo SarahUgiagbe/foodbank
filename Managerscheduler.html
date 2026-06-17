@@ -614,6 +614,9 @@ function submitSchedule() {
         if (currentModalDate) {
             loadStaffSchedule();
         }
+
+        // 🔄 Force the browser to refresh the current page to recalculate and sync view layouts
+        window.location.reload();
     })
     .catch(error => {
         console.error('Error handling transaction syncing updates:', error);
@@ -839,7 +842,6 @@ function formatDateDMY(dateStr) {
     const [year, month, day] = dateStr.split('-');
     return `${day}-${month}-${year}`;
 }
-
 </script>
 </body>
 </html>
