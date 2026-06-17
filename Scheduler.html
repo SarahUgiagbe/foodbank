@@ -513,10 +513,14 @@ function submitSchedule() {
     const daysWanted = parseInt(document.getElementById('daysWanted').value) || 0;
     const consolidatedDays = new Set();
     
+    // 🛡️ FIX: Only re-submit shifts if they are NOT already approved!
     for (let [dateStr, status] of existingShifts.entries()) {
-        consolidatedDays.add(dateStr);
+        if (status !== 'approved') {
+            consolidatedDays.add(dateStr);
+        }
     }
     
+    // Add any newly clicked days from the session view
     selectedDays.forEach(dateStr => {
         consolidatedDays.add(dateStr);
     });

@@ -5,6 +5,8 @@
 #No difference betwwen assigned days and days they want to work
 #Hovering over profile picture in navbar does makes whole page shift down
 
+#When removing user for one day, removes for all days
+#same for all buttons
 
 #Notifications sorted backwards
 
@@ -12,7 +14,6 @@
 #Accepting or refusing a shift does not update the staff requests
 
 import os  
-
 from fastapi import FastAPI, Request, Depends  # FASTAPI: Web server and routing tools
 from fastapi.responses import HTMLResponse  # FASTAPI: Tool to send back HTML web pages
 from fastapi.templating import Jinja2Templates  # FASTAPI: Bridge to drop text into HTML
@@ -446,6 +447,8 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
 @app.post("/api/shifts/batch-update")
 def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db)):
     try:
+        from sqlalchemy import extract
+
         for change in payload.changes:
             # 1. Map the text string 'name' to its unique numeric database 'user_id'
             user = db.query(UserProfile).filter(UserProfile.full_name == change.name).first()
@@ -465,6 +468,23 @@ def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db
             # 3. Apply the dynamic transactional rules requested
             if change.action == "accept":
                 if shift_record:
+                    # BACKEND SAFETY CAP GUARD:
+                    # Calculate how many shifts this specific user has ALREADY had approved for this specific calendar month
+                    approved_this_month = db.query(Shift).filter(
+                        Shift.user_id == user.user_id,
+                        Shift.status == "approved",
+                        extract('year', Shift.shift_date) == parsed_date.year,
+                        extract('month', Shift.shift_date) == parsed_date.month
+                    ).count()
+
+                    # Fallback cleanly to 0 if days_worked_in_month is null
+                    user_max_allowed = user.days_worked_in_month if user.days_worked_in_month is not None else 0
+
+                    # Block approval if it exceeds their chosen cap limit
+                    if approved_this_month >= user_max_allowed:
+                        print(f"❌ Safety Cap Triggered: Refusing to over-approve {user.full_name}.")
+                        continue
+
                     shift_record.status = "approved"
             
             elif change.action == "reject":
@@ -473,7 +493,8 @@ def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db
             
             elif change.action == "remove":
                 if shift_record:
-                    db.delete(shift_record)
+                    # Revert status from 'approved' back to a normal 'scheduled' worker request
+                    shift_record.status = "scheduled"
 
         # Commit all modified entries to Azure PostgreSQL simultaneously
         db.commit()
@@ -483,10 +504,13 @@ def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db
         db.rollback()
         print(f"❌ Batch Update Database error details: {e}")
         return {"status": "error", "message": str(e)}
+    
 
 @app.get("/api/shifts/by-date/{date_str}", response_model=DayStaffResponse)
 def get_shifts_by_date(date_str: str, db: Session = Depends(get_db)):
     try:
+        from sqlalchemy import extract
+
         # Parse incoming date parameter string (YYYY-MM-DD) safely
         parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         
@@ -499,15 +523,30 @@ def get_shifts_by_date(date_str: str, db: Session = Depends(get_db)):
         for s in day_shifts:
             # Query the user profile to fetch the volunteer's real full name and role mapping
             user_profile = db.query(UserProfile).filter(UserProfile.user_id == s.user_id).first()
-            full_name = user_profile.full_name if user_profile else f"User #{s.user_id}"
-            user_role = user_profile.role if user_profile else "Volunteer"
+            if not user_profile:
+                continue
+
+            full_name = user_profile.full_name
+            user_role = user_profile.role if user_profile.role else "Volunteer"
+            user_preference = user_profile.days_worked_in_month if user_profile.days_worked_in_month is not None else 0
             
-            # Map structural components matching your frontend modal render cycles
+            # Look up total approved slots across this user's entire month
+            total_approved_this_month = db.query(Shift).filter(
+                Shift.user_id == s.user_id,
+                Shift.status == "approved",
+                extract('year', Shift.shift_date) == parsed_date.year,
+                extract('month', Shift.shift_date) == parsed_date.month
+            ).count()
+
+            # Map the precise variables your JavaScript frontend expects
             shift_info = {
                 "name": full_name,
-                "role": user_role
+                "role": user_role,
+                "days_wanted": user_preference,
+                "total_approved_this_month": total_approved_this_month
             }
             
+            # Clear segregation to prevent duplicate rendering bugs
             if s.status == "approved":
                 working_list.append(shift_info)
             elif s.status == "scheduled":
@@ -518,6 +557,7 @@ def get_shifts_by_date(date_str: str, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Error fetching day breakdown details: {e}")
         return {"working": [], "requests": []}
+
 
 @app.post("/api/urgent-message")
 def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(get_db)):

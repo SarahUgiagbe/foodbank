@@ -227,8 +227,6 @@
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script src="/static/shared.js"></script>
 
-    
-   
 <script>
 /* ============================================
 MANAGEMENT SCHEDULER PAGE JS
@@ -327,7 +325,7 @@ function loadStaffSchedule() {
             // Render matching entries configured with 'approved' status
             if (data.working && data.working.length > 0) {
                 data.working.forEach(person => {
-                    const rowId = `staff-${person.name}`;
+                    const rowId = `staff-${person.name}-${currentModalDate}`;
                     const isRowDisabled = persistentDisabledRows.has(rowId);
                     
                     html += `
@@ -350,17 +348,37 @@ function loadStaffSchedule() {
             // Render matching entries configured with 'scheduled' status
             if (data.requests && data.requests.length > 0) {
                 data.requests.forEach(person => {
-                    const rowId = `request-${person.name}`;
+                    const rowId = `request-${person.name}-${currentModalDate}`;
                     const isRowDisabled = persistentDisabledRows.has(rowId);
+                    
+                    // 🌟 REAL-TIME CAP CALCULATION
+                    // Count how many times the manager has staged an "accept" for this specific volunteer in the pending tray
+                    const stagedAcceptsForUser = pendingChanges.filter(c => c.name === person.name && c.type === 'accept').length;
+                    
+                    // Count how many times the manager has staged a "remove" for this specific volunteer in the pending tray
+                    const stagedRemovalsForUser = pendingChanges.filter(c => c.name === person.name && c.type === 'remove').length;
+                    
+                    // Effective total = (Approved already in DB) + Staged Accepts - Staged Removals
+                    const currentApprovedCount = person.total_approved_this_month || 0;
+                    const dynamicTotalApproved = Math.max(0, currentApprovedCount + stagedAcceptsForUser - stagedRemovalsForUser);
+                    const daysWantedLimit = person.days_wanted || 0;
+                    
+                    // Cap reached if dynamic approved matches or exceeds their threshold choice
+                    const isCapReached = dynamicTotalApproved >= daysWantedLimit;
                     
                     html += `
                     <li class="list-group-item d-flex justify-content-between align-items-center ${isRowDisabled ? 'pending-change' : ''}" id="${rowId}">
-                        <span>${person.name}</span>
+                        <div class="d-flex flex-column">
+                            <span><strong>${person.name}</strong></span>
+                            <small class="text-muted">Approved: ${dynamicTotalApproved} / Wanted: ${daysWantedLimit} days</small>
+                        </div>
                         <div>
                             <button class="btn btn-sm me-1" 
                                 style="background-color: #7A9E7E; color: white;"
-                                onclick="acceptRequest('${person.name}', this)" ${isRowDisabled ? 'disabled' : ''}>
-                                Accept
+                                onclick="acceptRequest('${person.name}', this)" 
+                                ${isRowDisabled || isCapReached ? 'disabled' : ''}
+                                title="${isCapReached ? 'Volunteer has met their requested work cap limit.' : 'Accept Request'}">
+                                ${isCapReached ? 'Cap Hit' : 'Accept'}
                             </button>
                             <button class="btn btn-sm" 
                                 style="background-color: #8E5572; color: white;"
@@ -482,9 +500,8 @@ function createDayElement(dayNum, isOtherMonth, isWeekend, dateStr, dayOfWeek) {
         dayNumSpan.textContent = dayNum;
         div.appendChild(dayNumSpan);
 
-        // Add modal trigger attributes
         div.setAttribute('role', 'button');
-        div.style.cursor = 'pointer'; // Make it look clickable
+        div.style.cursor = 'pointer';
 
         if (!isOtherMonth && dateStr && dayOfWeek !== undefined) {
             const capacity = getDayCapacity(dateStr, dayOfWeek);
@@ -499,7 +516,6 @@ function createDayElement(dayNum, isOtherMonth, isWeekend, dateStr, dayOfWeek) {
 
 function getDayCapacity(dateStr, dayOfWeek) {
     if (DAY_CAPACITY[dayOfWeek]) {
-        // Fetch strictly from the database-mapped object, default to 0 if missing
         const approvedCount = monthlyApprovedCounts[dateStr] || 0;
         return {
             current: approvedCount,
@@ -549,11 +565,7 @@ function toggleDay(dateStr, element) {
 }
 
 function updateAvailabilityDisplay() {}
-
-function validateSelection() {
-    return true;
-}
-
+function validateSelection() { return true; }
 function updateSubmitButton() {}
 
 function changeMonth(delta) {
@@ -563,10 +575,6 @@ function changeMonth(delta) {
     fetchAndRenderMonth();
 }
 
-/* ===================================================================
-SUBMIT AVAILABILITY / SAVE ENGINE
-===================================================================
-*/
 function submitSchedule() {
     if (pendingChanges.length === 0) {
         showToast('No outstanding schedule modifications or requests to submit.');
@@ -577,12 +585,11 @@ function submitSchedule() {
         return;
     }
 
-    // Map local staging actions directly into valid structured transaction items
     const databasePayload = pendingChanges.map(change => {
         return {
             name: change.name,
             date: change.date,
-            action: change.type // Passes string values: 'accept', 'reject', or 'remove'
+            action: change.type
         };
     });
 
@@ -600,22 +607,16 @@ function submitSchedule() {
     .then(data => {
         showToast('Schedule modifications successfully updated in database!');
         
-        // Clean up client transaction cache states
         pendingChanges = [];
         persistentDisabledRows.clear();
         
-        // Dynamic ui view updates
         renderRecentChanges();
-        
-        // Fetch fresh approved counts from database to seamlessly redraw quantities
         fetchAndRenderMonth();
         
-        // If an active popup window configuration is open, load clean database values
         if (currentModalDate) {
             loadStaffSchedule();
         }
 
-        // 🔄 Force the browser to refresh the current page to recalculate and sync view layouts
         window.location.reload();
     })
     .catch(error => {
@@ -647,7 +648,6 @@ function assignWorkDays(sortedDays, count) {
 
 function openModal(dateStr) {
     currentModalDate = dateStr;
-    // Set the date in the modal header
     const [y, m, d] = dateStr.split('-');
     const dateObj = new Date(y, m - 1, d);
     const formatted = dateObj.toLocaleDateString('en-US', {
@@ -655,16 +655,13 @@ function openModal(dateStr) {
     });
     document.getElementById('modalDate').textContent = formatted;
 
-    // Update the content inside the modal
     document.getElementById('staffContent').innerHTML = 
         `<p>Showing schedule for ${formatted}</p>`;
 
-    // Open the modal using Bootstrap
     const modal = new bootstrap.Modal(document.getElementById('scheduleModal'));
     modal.show();
 }
 
-/* URGENT MESSAGING SCRIPT */ 
 function openUrgentModal() {
     if (!urgentQuill) {
         urgentQuill = new Quill('#urgentMessageText', {
@@ -719,7 +716,8 @@ function sendUrgentMessage() {
 }
 
 function acceptRequest(name, buttonElement) {
-    const listItem = document.getElementById(`request-${name}`);
+    const rowId = `request-${name}-${currentModalDate}`;
+    const listItem = document.getElementById(rowId);
     listItem.classList.add('pending-change');
 
     if (buttonElement) {
@@ -728,18 +726,22 @@ function acceptRequest(name, buttonElement) {
         buttons.forEach(btn => btn.disabled = true);
     }
 
-    persistentDisabledRows.add(listItem.id);
+    persistentDisabledRows.add(rowId);
     addPendingChange(
         `${name} - Shift Accepted (${formatDateDMY(currentModalDate)})`, 
-        listItem.id, 
+        rowId, 
         'accept', 
         name, 
         currentModalDate
     );
+    
+    // 🔄 Redraw UI locally to instantly disable matching requests across matching states
+    loadStaffSchedule();
 }
 
 function rejectRequest(name, buttonElement) {
-    const listItem = document.getElementById(`request-${name}`);
+    const rowId = `request-${name}-${currentModalDate}`;
+    const listItem = document.getElementById(rowId);
     listItem.classList.add('pending-change');
 
     if (buttonElement) {
@@ -748,10 +750,10 @@ function rejectRequest(name, buttonElement) {
         buttons.forEach(btn => btn.disabled = true);
     }
 
-    persistentDisabledRows.add(listItem.id);
+    persistentDisabledRows.add(rowId);
     addPendingChange(
         `${name} - Shift Rejected (${formatDateDMY(currentModalDate)})`, 
-        listItem.id, 
+        rowId, 
         'reject', 
         name, 
         currentModalDate
@@ -759,21 +761,25 @@ function rejectRequest(name, buttonElement) {
 }
 
 function removeStaff(name, buttonElement) {
-    const listItem = document.getElementById(`staff-${name}`);
+    const rowId = `staff-${name}-${currentModalDate}`;
+    const listItem = document.getElementById(rowId);
     listItem.classList.add('pending-change');
 
     if (buttonElement) {
         buttonElement.disabled = true;
     }
 
-    persistentDisabledRows.add(listItem.id);
+    persistentDisabledRows.add(rowId);
     addPendingChange(
         `${name} - Removed from shift (${formatDateDMY(currentModalDate)})`, 
-        listItem.id, 
+        rowId, 
         'remove', 
         name, 
         currentModalDate
     );
+    
+    // 🔄 Redraw UI locally to instantly unblock requests if target drops below limit
+    loadStaffSchedule();
 }
 
 function addPendingChange(text, relatedRowId, type, name, date) {
@@ -836,6 +842,11 @@ function undoChange(changeId) {
 
     pendingChanges = pendingChanges.filter(c => c.id !== changeId);
     renderRecentChanges();
+    
+    // 🔄 Re-evaluate rules configuration live to unlock any hit caps
+    if (currentModalDate) {
+        loadStaffSchedule();
+    }
 }
 
 function formatDateDMY(dateStr) {
