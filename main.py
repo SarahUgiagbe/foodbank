@@ -438,11 +438,10 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
-    
+
 #END INVENTORY PAGE -------------------------------------------------------------------------------------------------
 
-
-#START MANAGER SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
+#START MANAGER SCHEDULOR PAGE ---------------------------------------------------------------------------------------
 
 @app.post("/api/shifts/batch-update")
 def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db)):
