@@ -1,18 +1,3 @@
-#How many days do you want to work not working as intended
-#Message saying "you are already assigned days is wrong"
-#You are already assigned days needs to ignore previous days
-#Cannot unselect days in scheduler page
-#No difference betwwen assigned days and days they want to work
-#Hovering over profile picture in navbar does makes whole page shift down
-
-#When removing user for one day, removes for all days
-#same for all buttons
-
-#Notifications sorted backwards
-
-#Manager Schedulor page-----------
-#Accepting or refusing a shift does not update the staff requests
-
 import os  
 from fastapi import FastAPI, Request, Depends  # FASTAPI: Web server and routing tools
 from fastapi.responses import HTMLResponse  # FASTAPI: Tool to send back HTML web pages
@@ -34,7 +19,6 @@ from pydantic import BaseModel
 #-------------------------------------------------------------------------------------------------------
 app = FastAPI()  # Turn on the FastAPI engine
 
-# Tell FastAPI to look inside your CURRENT folder 
 templates = Jinja2Templates(directory=".")
 app.mount("/static", StaticFiles(directory="."), name="static")
 
@@ -42,7 +26,7 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 DATABASE_URL = URL.create(
     "postgresql+psycopg2",
     username="ocheabah",
-    password="Yolor787@",  # plain (unescaped) text
+    password="Yolor787@",  
     host="oche-server.postgres.database.azure.com",
     port=5432,
     database="foodbank",
@@ -50,6 +34,7 @@ DATABASE_URL = URL.create(
 
 # Create the engine manager that talks to the database
 engine = create_engine(DATABASE_URL)
+
 #Testing connection to database
 try:
     # 1. Connect to the database and execute a dummy query
@@ -84,7 +69,7 @@ def set_active_user(payload: LoginPayload):
 
 # Database table blueprint for user profile
 class UserProfile(Base):
-    __tablename__ = "users"  # Tells Python to search your "users" table
+    __tablename__ = "users"  
 
     user_id = Column(Integer, primary_key=True)
     full_name = Column(String)
@@ -126,7 +111,7 @@ class InventoryItem(Base):
     quantity = Column(Integer)
     expiry_date = Column(Date)
 
-
+#New donation tabele
 class NewDonationPayload(BaseModel):
     food_name: str
     food_type: str
@@ -134,15 +119,15 @@ class NewDonationPayload(BaseModel):
     expiry_date: str
 
 class UpdateQuantitiesPayload(BaseModel):
-    items: list[dict] # Expected format: [{"id": 1, "quantity": 12}, ...]
+    items: list[dict] 
 
 #For urgent messages
 class UrgentMessagePayload(BaseModel):
     message_html: str
 
 class DayStaffResponse(BaseModel):
-    working: list[dict]  # Will hold approved items: [{"name": "John", "role": "Volunteer"}]
-    requests: list[dict] # Will hold scheduled items: [{"name": "Emma"}]
+    working: list[dict]  
+    requests: list[dict] 
 
 class SingleShiftChange(BaseModel):
     name: str
@@ -161,9 +146,6 @@ def get_db():
         db.close()  # Close it up when the page finishes loading to save memory
 
 
-# ALL BELOW ARE CODE PER PAGE
-
-#Finished
 @app.get("/profile.html", response_class=HTMLResponse)  
 def view_profile_page(request: Request, db: Session = Depends(get_db)): 
     
@@ -214,7 +196,6 @@ def view_contact_page(request: Request, db: Session = Depends(get_db)):
         context={"is_manager": is_manager}
     )
 
-#Almost Finished. Need more data in database?
 # Almost Finished. Need more data in database?
 @app.get("/notifications.html", response_class=HTMLResponse)  
 def view_notifications_page(request: Request, db: Session = Depends(get_db)):
@@ -225,7 +206,6 @@ def view_notifications_page(request: Request, db: Session = Depends(get_db)):
     user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
     is_manager = user.is_manager if user else False
 
-    # FIX: Added .order_by(Notification.created_at.desc()) to pull newest first
     db_notifications = db.query(Notification)\
                          .filter(Notification.user_id == active_id)\
                          .order_by(Notification.created_at.desc())\
@@ -257,7 +237,6 @@ def view_notifications_page(request: Request, db: Session = Depends(get_db)):
         }
     )
 
-#Finished
 @app.get("/login.html", response_class=HTMLResponse)  
 def view_login_page(request: Request, db: Session = Depends(get_db)):
     
@@ -276,7 +255,7 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
             "age": user.age,
             "working_days": user.days_worked_in_month
         }
-    # 3. Pass the complete dictionary containing everyone over to Login.html
+
     return templates.TemplateResponse(
         request=request,
         name="Login.html",
@@ -287,8 +266,6 @@ def view_login_page(request: Request, db: Session = Depends(get_db)):
 
 
 #SCHEDULOR PAGE -------------------------------------------------------------------------------------------------
-#The page successfully shows days people are assigned, but people can assign themselves
-#A bug regarding days assigned as well?
 @app.get("/scheduler.html", response_class=HTMLResponse)  
 def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
     global current_logged_in_id
@@ -323,11 +300,10 @@ def view_scheduler_page(request: Request, db: Session = Depends(get_db)):
             "user_shifts": user_assigned_shifts,  
             "active_user_id": active_id,
             "is_manager": is_manager,
-            "days_worked_saved": days_worked_saved # PASS TO TEMPLATE HERE
+            "days_worked_saved": days_worked_saved 
         }
     )
 
-# 3. ADD THE DATA SUBMIT ACTION ENDPOINT
 class ScheduleSubmitPayload(BaseModel):
     user_id: int
     days_wanted: int
@@ -443,7 +419,6 @@ def update_inventory_quantities(payload: UpdateQuantitiesPayload, db: Session = 
 #END INVENTORY PAGE -------------------------------------------------------------------------------------------------
 
 #START MANAGER SCHEDULOR PAGE ---------------------------------------------------------------------------------------
-
 @app.post("/api/shifts/batch-update")
 def batch_update_shifts(payload: BatchShiftPayload, db: Session = Depends(get_db)):
     try:
@@ -576,7 +551,6 @@ def send_broadcast_message(payload: UrgentMessagePayload, db: Session = Depends(
             new_notification = Notification(
                 user_id=user_row.user_id,
                 content=payload.message_html,
-                # Use text() to force PostgreSQL to accept the string as a timestamp
                 created_at=text(f"'{current_time_str}'::timestamp")
             )
             db.add(new_notification)
@@ -711,7 +685,3 @@ def get_approved_counts(year: int, month: int, db: Session = Depends(get_db)):
 #David
 #hashedpassword5
 
-#Sam to do
-#Need to test with Oche the messaging works properly and for him to add custom messages for the presentation
-#Check schedulor page is sending data properly
-#John @example not working???
