@@ -426,7 +426,7 @@ function clearAllFilters() {
 function removeItem(id) {
   const item = inventory.find(i => i.id === id);
   const itemName = item ? item.productName : 'Item';
-  renderInventoryTable();
+  
   showToast(`${itemName} marked for deletion (quantity reached 0). Click 'Submit Updates' to apply changes.`);
 }
 
@@ -443,7 +443,9 @@ function decrementQuantity(id) {
   if (item) {
     item.quantity--;
     if (item.quantity <= 0) {
+      item.quantity = 0; 
       removeItem(id);
+      renderInventoryTable(); 
     } else {
       renderInventoryTable();
     }
@@ -453,11 +455,17 @@ function decrementQuantity(id) {
 function updateQuantity(id, value) {
   const item = inventory.find(i => i.id === id);
   if (item) {
-    const newQuantity = parseInt(value) || 0;
-    if (newQuantity <= 0) {
-      removeItem(id);
+    const newQuantity = parseInt(value);
+    
+    if (isNaN(newQuantity) || newQuantity < 0) {
+      item.quantity = 0;
     } else {
       item.quantity = newQuantity;
+    }
+
+    if (item.quantity === 0) {
+      removeItem(id);
+    } else {
       renderInventoryTable();
     }
   }
