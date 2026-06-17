@@ -240,13 +240,16 @@ let currentModalDate = null;
 // Track actions per element ID to persist disabled states across modal views
 let persistentDisabledRows = new Set();
 
+// Track approved counts fetched directly from the database
+let monthlyApprovedCounts = {}; 
+
 // Daily capacity limits (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5)
 const DAY_CAPACITY = {
-    1: { max: 6, current: 0 },  // Monday
-    2: { max: 8, current: 0 },  // Tuesday
-    3: { max: 4, current: 0 },  // Wednesday
-    4: { max: 8, current: 0 },  // Thursday
-    5: { max: 5, current: 0 }   // Friday
+    1: { max: 6 },  // Monday
+    2: { max: 8 },  // Tuesday
+    3: { max: 4 },  // Wednesday
+    4: { max: 8 },  // Thursday
+    5: { max: 5 }   // Friday
 };
 
 let fullDays = new Set();
@@ -258,10 +261,8 @@ const monthNames = [
 const WEEKEND_DAYS = [0, 6];
 
 document.addEventListener('DOMContentLoaded', function () {
-    initDemoData();
-    /*updateAssignedDaysInfo();*/
-    renderCalendar();
-    /*updateAvailabilityDisplay();*/
+    fetchAndRenderMonth();
+    
     // Get modal element
     const scheduleModal = document.getElementById('scheduleModal');
     
@@ -272,6 +273,30 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+function fetchAndRenderMonth() {
+    // API parameters use 1-indexed months for backend parsing convenience
+    fetch(`/api/shifts/approved-counts?year=${currentYear}&month=${currentMonth + 1}`)
+        .then(response => response.json())
+        .then(data => {
+            monthlyApprovedCounts = data; // Structure: {'2026-06-08': 4, '2026-06-09': 8}
+            
+            // Recalculate full days based strictly on approved counts from DB
+            fullDays.clear();
+            Object.entries(monthlyApprovedCounts).forEach(([dateStr, count]) => {
+                const dayOfWeek = new Date(dateStr).getDay();
+                if (DAY_CAPACITY[dayOfWeek] && count >= DAY_CAPACITY[dayOfWeek].max) {
+                    fullDays.add(dateStr);
+                }
+            });
+            
+            renderCalendar();
+        })
+        .catch(error => {
+            console.error("Error fetching approved counts:", error);
+            monthlyApprovedCounts = {};
+            renderCalendar();
+        });
+}
 
 function loadStaffSchedule() {
     const content = document.getElementById('staffContent');
@@ -352,7 +377,6 @@ function loadStaffSchedule() {
         });
 }
 
-
 function updateAssignedDaysInfo() {
     const assignedCount = assignedDays.size;
     const daysWantedInput = document.getElementById('daysWanted');
@@ -374,27 +398,6 @@ function updateAssignedDaysInfo() {
     } else {
         assignedInfo.classList.add('d-none');
         daysWantedInput.min = 1;
-    }
-}
-
-function initDemoData() {
-    const demoSignups = {
-        '2026-06-08': 4,  // Monday - 4/6
-        '2026-06-09': 8,  // Tuesday - 8/8 FULL
-        '2026-06-10': 2,  // Wednesday - 2/4
-        '2026-06-11': 7,  // Thursday - 7/8
-        '2026-06-12': 5,  // Friday - 5/5 FULL
-    };
-
-    for (const [dateStr, count] of Object.entries(demoSignups)) {
-        const dateObj = new Date(dateStr);
-        const dayOfWeek = dateObj.getDay();
-        if (DAY_CAPACITY[dayOfWeek]) {
-            DAY_CAPACITY[dayOfWeek].current += count;
-            if (count >= DAY_CAPACITY[dayOfWeek].max) {
-                fullDays.add(dateStr);
-            }
-        }
     }
 }
 
@@ -444,9 +447,7 @@ function renderCalendar() {
                     currentMonth === today.getMonth() &&
                     currentYear === today.getFullYear()
                 ) day.classList.add('today');
-                /*day.addEventListener('click', () => toggleDay(dateStr, day));*/
                 day.addEventListener('click', () => {
-                    /*toggleDay(dateStr, day);*/
                     openModal(dateStr);
                 });
             }
@@ -477,7 +478,7 @@ function createDayElement(dayNum, isOtherMonth, isWeekend, dateStr, dayOfWeek) {
 
         // Add modal trigger attributes
         div.setAttribute('role', 'button');
-        div.style.cursor = 'pointer';  // Make it look clickable
+        div.style.cursor = 'pointer'; // Make it look clickable
 
         if (!isOtherMonth && dateStr && dayOfWeek !== undefined) {
             const capacity = getDayCapacity(dateStr, dayOfWeek);
@@ -492,10 +493,10 @@ function createDayElement(dayNum, isOtherMonth, isWeekend, dateStr, dayOfWeek) {
 
 function getDayCapacity(dateStr, dayOfWeek) {
     if (DAY_CAPACITY[dayOfWeek]) {
-        let extra = 0;
-        if (selectedDays.has(dateStr)) extra++;
+        // Fetch strictly from the database-mapped object, default to 0 if missing
+        const approvedCount = monthlyApprovedCounts[dateStr] || 0;
         return {
-            current: DAY_CAPACITY[dayOfWeek].current + extra,
+            current: approvedCount,
             max: DAY_CAPACITY[dayOfWeek].max
         };
     }
@@ -541,31 +542,24 @@ function toggleDay(dateStr, element) {
     renderCalendar();
 }
 
-function updateAvailabilityDisplay() {
-    /*submitBtn.disabled = selectedDays.size === 0;*/
-}
-
+function updateAvailabilityDisplay() {}
 
 function validateSelection() {
     return true;
 }
 
-function updateSubmitButton() {
-}
-
+function updateSubmitButton() {}
 
 function changeMonth(delta) {
     currentMonth += delta;
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-    renderCalendar();
+    fetchAndRenderMonth();
 }
 
 /* ===================================================================
 SUBMIT AVAILABILITY / SAVE ENGINE
 ===================================================================
-Fires when the primary "Submit Availability" action bar at the bottom is pressed.
-It batches the staged updates and commits them straight to your FastAPI layer.
 */
 function submitSchedule() {
     if (pendingChanges.length === 0) {
@@ -606,7 +600,9 @@ function submitSchedule() {
         
         // Dynamic ui view updates
         renderRecentChanges();
-        renderCalendar();
+        
+        // Fetch fresh approved counts from database to seamlessly redraw quantities
+        fetchAndRenderMonth();
         
         // If an active popup window configuration is open, load clean database values
         if (currentModalDate) {
@@ -640,7 +636,6 @@ function assignWorkDays(sortedDays, count) {
     updateAvailabilityDisplay();
 }
 
-
 function openModal(dateStr) {
     currentModalDate = dateStr;
     // Set the date in the modal header
@@ -662,14 +657,12 @@ function openModal(dateStr) {
 
 /* URGENT MESSAGING SCRIPT */ 
 function openUrgentModal() {
-    // Set up Quill editor if it hasn't been created yet
     if (!urgentQuill) {
         urgentQuill = new Quill('#urgentMessageText', {
             theme: 'snow',
             placeholder: 'Write your urgent message here...'
         });
     } else {
-        // Clear previous message if editor already exists
         urgentQuill.setText('');
     }
 
@@ -685,10 +678,8 @@ function sendUrgentMessage() {
         return;
     }
 
-    // Capture the rich-text layout HTML (includes bold, paragraph tags, etc.)
     const formattedMessage = urgentQuill.root.innerHTML;
 
-    // Fire data payload over to the FastAPI Python environment
     fetch('/api/urgent-message', {
         method: 'POST',
         headers: {
@@ -701,7 +692,6 @@ function sendUrgentMessage() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // Close down modal window programmatically
             const modalElement = document.getElementById('urgentMessageModal');
             const modalInstance = bootstrap.Modal.getInstance(modalElement);
             if (modalInstance) {
@@ -718,7 +708,6 @@ function sendUrgentMessage() {
         alert('An error occurred while transmitting your message to the server.');
     });
 }
-
 
 function acceptRequest(name, buttonElement) {
     const listItem = document.getElementById(`request-${name}`);
@@ -778,7 +767,6 @@ function removeStaff(name, buttonElement) {
     );
 }
 
-/* This is for storing data temporarily, for removing things in the recent changes card. */
 function addPendingChange(text, relatedRowId, type, name, date) {
     const changeId = `change-${Date.now()}`;
     pendingChanges.push({ 
@@ -792,7 +780,6 @@ function addPendingChange(text, relatedRowId, type, name, date) {
     renderRecentChanges();
 }
 
-/* This clears the existing HTML container and rebuilds one box per pending change, each with its own "Undo" button. */
 function renderRecentChanges() {
     const container = document.getElementById('recentChangesContainer');
 
@@ -828,10 +815,8 @@ function undoChange(changeId) {
     const change = pendingChanges.find(c => c.id === changeId);
 
     if (change) {
-        // Remove from the persistent tracking set
         persistentDisabledRows.delete(change.relatedRowId);
 
-        // If the element happens to be currently open/rendered in the visible DOM modal layout, reset it instantly
         const row = document.getElementById(change.relatedRowId);
         if (row) {
             row.classList.remove('pending-change');

@@ -601,6 +601,32 @@ def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db))
     )
 
 
+@app.get("/api/shifts/approved-counts")
+def get_approved_counts(year: int, month: int, db: Session = Depends(get_db)):
+    try:
+        # Query approved shifts for the specific year and month
+        # EXTRACT components out of the Date field for performance stability
+        from sqlalchemy import extract
+        
+        results = db.query(Shift.shift_date, text("count(*)"))\
+            .filter(Shift.status == "approved")\
+            .filter(extract('year', Shift.shift_date) == year)\
+            .filter(extract('month', Shift.shift_date) == month)\
+            .group_by(Shift.shift_date)\
+            .all()
+            
+        # Format the response object into a clean dictionary mapping: {"YYYY-MM-DD": count}
+        counts_map = {}
+        for shift_date, count in results:
+            if shift_date:
+                date_str = shift_date.strftime("%Y-%m-%d")
+                counts_map[date_str] = count
+                
+        return counts_map
+        
+    except Exception as e:
+        print(f"❌ Error compiling approved capacities: {e}")
+        return {}
 
 #END Maneger page-----------------------------------------------------------------------------------------
 
