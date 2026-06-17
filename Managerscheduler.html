@@ -68,33 +68,39 @@
             <div class="col-lg-4 d-flex flex-column gap-3">
 
                 <!--! SHIFT REQUESTS-->
-                <div class="card h-100">
-                    <div class="card-header-bronze">
-                        <h5 class="mb-0">Shift Requests</h5>
-                    </div>
-                    <div style="overflow-y: auto; max-height: 300px;">
-                        {% if shift_requests %}
-                            {% for req in shift_requests %}
-                                <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start border-bottom">
-                                    <div class="availability-box">
-                                        <strong class="text-dark d-block mb-1">{{ req.volunteer_name }}</strong>
-                                        <small class="text-muted">
-                                            Availability:<br>
-                                            {% for d in req.available_dates %}
-                                                {{ d }}<br>
-                                            {% endfor %}
-                                            <strong>Days wanted to work:</strong> {{ req.days_wanted }}
-                                        </small>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="card-body p-4 text-center text-muted">
-                                <p class="mb-0">No pending shift requests found.</p>
-                            </div>
-                        {% endif %}
-                    </div>
+            <div class="card h-100">
+                <div class="card-header-bronze">
+                    <h5 class="mb-0">Shift Requests</h5>
                 </div>
+                <div style="overflow-y: auto; max-height: 300px;">
+                    {% if shift_requests %}
+                        {% for req in shift_requests %}
+                            <div class="card-body p-4 text-center d-flex flex-column justify-content-flex-start border-bottom">
+                                <div class="availability-box">
+                                    <strong class="text-dark d-block mb-1">{{ req.volunteer_name }}</strong>
+                                    <small class="text-muted">
+                                        Availability:<br>
+                                        {% for d in req.available_dates %}
+                                            {{ d }}<br>
+                                        {% endfor %}
+                                        
+                                        Approved:<br>
+                                        {% for d in req.approved_dates %}
+                                            {{ d }}<br>
+                                        {% endfor %}
+
+                                        <strong>Days wanted to work:</strong> {{ req.days_wanted }}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="card-body p-4 text-center text-muted">
+                            <p class="mb-0">No pending shift requests found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
 
                 <!--! RECENT EDITS FROM MANAGEMENT -->
                 <div class="card h-100">

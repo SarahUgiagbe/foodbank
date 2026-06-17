@@ -557,40 +557,67 @@ def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db))
     user = db.query(UserProfile).filter(UserProfile.user_id == active_id).first()
     is_manager = user.is_manager if user else False
 
-    # Get today's local date to compare against database entries
+    # Get today's local date to look at current or future shift allocations
     today_date = datetime.now().date()
 
-    # 1. FETCH PENDING SHIFTS THAT ARE TODAY OR IN THE FUTURE
-    pending_shifts = db.query(Shift).filter(
-        Shift.status == "scheduled",
-        Shift.shift_date >= today_date  # <-- Filters out any dates before today
-    ).all()
+    # 1. FETCH ALL SHIFTS FOR TODAY OR THE FUTURE (Both pending requests and finalized ones)
+    active_shifts = db.query(Shift).filter(
+        Shift.status.in_(["scheduled", "approved"]),
+        Shift.shift_date >= today_date
+    ).order_by(Shift.shift_date.asc()).all()
 
-    # 2. GROUP SHIFTS BY USER ID TO AGGREGATE DATES
+    # 2. AGGREGATE DATES BY USER ID
     requests_map = {}
     
-    for shift in pending_shifts:
+    for shift in active_shifts:
         u_id = shift.user_id
         date_str = shift.shift_date.strftime("%d/%m/%Y") if shift.shift_date else ""
         
+        # If this user isn't in our tracking map yet, initialize their profile statistics
         if u_id not in requests_map:
             volunteer = db.query(UserProfile).filter(UserProfile.user_id == u_id).first()
             v_name = volunteer.full_name if volunteer else f"User #{u_id}"
             v_preference = volunteer.days_worked_in_month if volunteer and volunteer.days_worked_in_month else 0
             
             requests_map[u_id] = {
+                "user_obj": volunteer, # Keep track of the DB object to update it later
                 "volunteer_name": v_name,
-                "available_dates": [],
+                "available_dates": [],  # Holds pending ('scheduled') dates
+                "approved_dates": [],   # Holds locked-in ('approved') dates
                 "days_wanted": v_preference
             }
             
-        if date_str and date_str not in requests_map[u_id]["available_dates"]:
-            requests_map[u_id]["available_dates"].append(date_str)
+        # Distribute dates to their respective lists based on database status string
+        if date_str:
+            if shift.status == "scheduled":
+                if date_str not in requests_map[u_id]["available_dates"]:
+                    requests_map[u_id]["available_dates"].append(date_str)
+            elif shift.status == "approved":
+                if date_str not in requests_map[u_id]["approved_dates"]:
+                    requests_map[u_id]["approved_dates"].append(date_str)
 
-    # Flatten map collections into a clean list layout for your template loops
+    # 3. CRITICAL AUTOMATIC ADJUSTMENT: Run through users and fix preferences based on future options
+    database_changed = False
+    for u_id, data in requests_map.items():
+        total_future_options = len(data["available_dates"]) + len(data["approved_dates"])
+        
+        # If days_wanted is higher than their remaining active calendar dates, force it down
+        if data["days_wanted"] > total_future_options:
+            print(f"⏰ Time-Passed Adjustment: {data['volunteer_name']} wanted {data['days_wanted']} days, "
+                  f"but only has {total_future_options} shifts remaining from today onward. Adjusting database.")
+            
+            data["days_wanted"] = total_future_options
+            if data["user_obj"]:
+                data["user_obj"].days_worked_in_month = total_future_options
+                database_changed = True
+
+    if database_changed:
+        db.commit()
+
+    # Flatten collections mapping cleanly into an iterable list for Jinja
     shift_requests_list = list(requests_map.values())
 
-    # 3. PASS THE DATA TO THE TEMPLATE
+    # 4. PASS THE DATA TO THE TEMPLATE
     return templates.TemplateResponse(
         request=request, 
         name="ManagerScheduler.html", 
@@ -599,7 +626,6 @@ def view_manager_scheduler_page(request: Request, db: Session = Depends(get_db))
             "shift_requests": shift_requests_list
         }
     )
-
 
 @app.get("/api/shifts/approved-counts")
 def get_approved_counts(year: int, month: int, db: Session = Depends(get_db)):
