@@ -2,20 +2,6 @@
    PROFILE PAGE STYLES
    ============================================ */
 
-/* Avatar Circle */
-.avatar-circle {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  background-color: rgba(201, 151, 58, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  color: var(--golden-bronze);
-  margin: 0 auto 1rem;
-}
-
 /* Volunteer Badge */
 .badge-volunteer {
   background-color: rgba(122, 158, 126, 0.15);
@@ -39,27 +25,9 @@
   color: var(--golden-bronze);
 }
 
-/* Info Row Layout */
-.info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 1rem;
-}
-
-.info-row i {
-  font-size: 1.1rem;
+/* Card Title Golden */
+.card-title-golden {
   color: var(--golden-bronze);
-  margin-top: 2px;
-}
-
-/* Info Label */
-.info-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--muted-teal);
-  margin-bottom: 2px;
 }
 
 /* Footer Styles */
@@ -78,12 +46,6 @@
   background-color: var(--linen);
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(201, 151, 58, 0.2);
-}
-
-.card-header-bronze {
-  background-color: var(--golden-bronze);
-  color: var(--linen);
-  padding: 1rem 1.5rem;
 }
 
 /* Form Labels on Profile */

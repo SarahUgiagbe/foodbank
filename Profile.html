@@ -63,16 +63,24 @@
         <div class="row g-4 justify-content-center">
 
             <!-- Personal Info Display -->
-            <div class="col-lg-7">
+            <div class="col-lg-8">
                 <div class="card">
                     <div class="card-header-linen">
-                        <h4 class="mb-0">Personal Information</h4>
-                    </div>
+                    <h4 class="mb-0">Personal Information</h4>
+                   </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-sm-6">
                                 <label class="form-label">Full Name</label>
                                 <p class="info-value">{{ user.full_name }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">Status</label>
+                                <p class="info-value">
+                                    <span class="badge-volunteer">
+                                        <i class="bi bi-patch-check-fill me-1"></i> {{user.role}}
+                                    </span>
+                                </p>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">
@@ -89,42 +97,6 @@
                             <div class="col-sm-4">
                                 <label class="form-label">Age</label>
                                 <p class="info-value">{{ user.age }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Volunteer Card -->
-            <div class="col-lg-4">
-                <div class="card text-center">
-                    <div class="card-header-bronze">
-                        <h5 class="mb-0">{{user.role}}</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="avatar-circle">
-                            <i class="bi bi-person-fill"></i>
-                        </div>
-                        <h4 class="mb-1">{{ user.full_name }}</h4>
-                        <div class="mb-3">
-                            <span class="badge-volunteer">
-                                <i class="bi bi-patch-check-fill me-1"></i> {{user.role}}
-                            </span>
-                        </div>
-                        <div class="text-start mt-3">
-                            <div class="info-row">
-                                <i class="bi bi-envelope"></i>
-                                <div>
-                                    <div class="info-label">Email</div>
-                                    <div>{{ user.email }}</div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <i class="bi bi-telephone"></i>
-                                <div>
-                                    <div class="info-label">Phone</div>
-                                    <div>{{ user.phone_number }}</div>
-                                </div>
                             </div>
                         </div>
                     </div>
