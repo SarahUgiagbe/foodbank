@@ -156,7 +156,7 @@
   border-radius: 16px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   background: var(--linen);
   color: var(--graphite);
@@ -164,11 +164,9 @@
   padding: 4px;
 }
 
-.calendar-day:hover:not(.disabled):not(.selected):not(.weekend):not(.past):not(
-    .assigned
-  ):not(.full) {
+.calendar-day:hover:not(.disabled):not(.selected):not(.weekend):not(.past):not(.assigned):not(.full):not(.scheduled-shift):not(.approved-shift) {
   border-color: var(--golden-bronze);
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
 
 /* Day number */
